@@ -3,6 +3,7 @@ package ca.uoguelph.pspenler.maptracker;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -24,6 +25,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private final static float maxZoom = 3.f;
     private float scaleFactor = 1;
     private float oScaleFactor = 1;
+    private float imageScale = 1;
     private ScaleGestureDetector scaleGestureDetector;
 
     private final static int NONE = 0;
@@ -33,18 +35,26 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
     private float startX = 0;
     private float startY = 0;
+    private float scaleX = 0;
+    private float scaleY = 0;
     private float translateX = 0;
     private float translateY = 0;
     private float prevTranslateX = 0;
     private float prevTranslateY = 0;
 
+    Matrix scaleMatrix = new Matrix();
+
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            scaleFactor = ((detector.getScaleFactor() - 1) / 10) + oScaleFactor;
+            Float detectedScaleFactor = detector.getScaleFactor();
+
+            scaleFactor = (detectedScaleFactor - 1) + oScaleFactor;
             scaleFactor = Math.max(minZoom, Math.min(maxZoom, scaleFactor));
-            //invalidate();
-            //requestLayout();
+
+            translateX = prevTranslateX + ((scaleFactor - oScaleFactor) * -1 * ((scaleGestureDetector.getFocusX() - prevTranslateX)/oScaleFactor));
+            translateY = prevTranslateY + ((scaleFactor - oScaleFactor) * -1 * ((scaleGestureDetector.getFocusY() - prevTranslateY)/oScaleFactor));
+
             return super.onScale(detector);
         }
     }
@@ -58,21 +68,30 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     public boolean onTouchEvent(MotionEvent event) {
         switch(event.getAction() & MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
-                eventState = PAN;
-                startX = event.getX() - prevTranslateX;
-                startY = event.getY() - prevTranslateY;
+                if(eventState != ZOOM) {
+                    eventState = PAN;
+                    startX = event.getX() - prevTranslateX;
+                    startY = event.getY() - prevTranslateY;
+                }
                 break;
             case MotionEvent.ACTION_UP:
                 prevTranslateX = translateX;
                 prevTranslateY = translateY;
                 eventState = NONE;
+                Log.e("PREV TRANSLATES", "X:" + Float.toString(prevTranslateX) + " Y:" + Float.toString(prevTranslateY));
                 break;
             case MotionEvent.ACTION_MOVE:
-                translateX = event.getX() - startX;
-                translateY = event.getY() - startY;
+                if(eventState != ZOOM) {
+                    translateX = event.getX() - startX;
+                    translateY = event.getY() - startY;
+                }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 eventState = ZOOM;
+                scaleX = scaleGestureDetector.getFocusX();
+                scaleY = scaleGestureDetector.getFocusY();
+                oScaleFactor = scaleFactor;
+                Log.e("MOTION EVENT", "ACTION POINTER DOWN");
                 break;
         }
 
@@ -82,9 +101,12 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
             invalidate();
             requestLayout();
         }
-
-        oScaleFactor = scaleFactor;
         return true;
+    }
+
+    @Override
+    public boolean performClick() {
+        return super.performClick();
     }
 
     @Override
@@ -95,11 +117,16 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         int height = displayMetrics.heightPixels;
 
         canvas.save();
-        canvas.scale(scaleFactor, scaleFactor);
-        canvas.translate(translateX/scaleFactor, translateY/scaleFactor);
+
+        scaleMatrix.setTranslate(imageScale * translateX/scaleFactor, imageScale * translateY/scaleFactor);
+        scaleMatrix.postScale(scaleFactor/imageScale, scaleFactor/imageScale);
+
+        canvas.setMatrix(scaleMatrix);
         canvas.drawBitmap(mBitmap, 0, 0, null);
+
         canvas.restore();
-        Log.d("CANVAS LOG", "canvas:" + Integer.toString(canvas.getHeight()) + " screen:" + getResources().getDisplayMetrics().heightPixels);
+
+        Log.d("CANVAS LOG", "X:" + Float.toString(translateX) + " Y:" + Float.toString(translateY) + " FINAL X:" + Float.toString(scaleX) + " Y:" + Float.toString(scaleY) + " S:" + Float.toString(scaleFactor) + " oS:" + Float.toString(oScaleFactor));
     }
 
     @Override
@@ -127,7 +154,9 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
             mImageWidth = displayMetrics.widthPixels;
             mImageHeight = Math.round(mImageWidth * aspectRatio);
             //TODO, MOVE TO BACKGROUND THREAD
-            mBitmap = Bitmap.createScaledBitmap(bitmap, mImageWidth, mImageHeight, false);
+            mBitmap = Bitmap.createBitmap(bitmap);
+            imageScale = mBitmap.getWidth() / mImageWidth;
+            translateY = prevTranslateY = (displayMetrics.heightPixels / 2) - (mImageHeight /2) + 60;
             invalidate();
             requestLayout();
         } catch (IOException e) {
