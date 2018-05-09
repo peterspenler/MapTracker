@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_configure"
+    android:background="@color/background_dark">
+
+    <TextView
+        android:id="@+id/experimentName_title"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:paddingLeft="10dp"
+        android:layout_marginTop="20dp"
+        android:text="Experiment Name"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"/>
+
+    <TextView
+        android:id="@+id/configurationFile_title"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="10dp"
+        android:text="Configuration File"
+        app:layout_constraintTop_toBottomOf="@+id/experimentName_edit"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"/>
+
+    <TextView
+        android:id="@+id/resultsServer_title"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="10dp"
+        android:text="Results Server"
+        app:layout_constraintTop_toBottomOf="@+id/configurationFile_edit"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"/>
+
+    <TextView
+        android:id="@+id/beaconLabel_title"
+        android:layout_width="match_parent"
+        android:layout_height="15dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="10dp"
+        android:text="Beacon Label"
+        app:layout_constraintTop_toBottomOf="@+id/resultsServer_edit"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"/>
+
+    <TextView
+        android:id="@+id/beaconHeight_title"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="10dp"
+        android:text="Beacon Height"
+        app:layout_constraintTop_toBottomOf="@+id/beaconLabel_edit"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"/>
+
+    <EditText
+        android:id="@+id/experimentName_edit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/experimentName_title"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"
+        android:backgroundTint="@color/text_light"/>
+
+    <EditText
+        android:id="@+id/configurationFile_edit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/configurationFile_title"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"
+        android:backgroundTint="@color/text_light"/>
+
+    <EditText
+        android:id="@+id/resultsServer_edit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/resultsServer_title"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"
+        android:backgroundTint="@color/text_light"/>
+
+    <EditText
+        android:id="@+id/beaconLabel_edit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/beaconLabel_title"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"
+        android:backgroundTint="@color/text_light"/>
+
+    <EditText
+        android:id="@+id/beaconHeight_edit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/beaconHeight_title"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="0dp"
+        android:textColor="@color/text_light"
+        android:backgroundTint="@color/text_light"/>
+</android.support.constraint.ConstraintLayout>
