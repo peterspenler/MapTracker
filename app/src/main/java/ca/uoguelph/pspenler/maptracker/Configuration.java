@@ -26,7 +26,7 @@ public class Configuration implements Parcelable {
     private int beaconHeight;
     private int validConfig;
 
-    public Configuration(){
+    Configuration(){
         experimentName = "";
         configFile = "";
         resultsServer = "";
@@ -106,7 +106,7 @@ public class Configuration implements Parcelable {
         return landmarks;
     }
 
-    public void setLandmarks(ArrayList<Landmark> landmarks) {
+    private void setLandmarks(ArrayList<Landmark> landmarks) {
         this.landmarks = landmarks;
     }
 
@@ -114,7 +114,7 @@ public class Configuration implements Parcelable {
         this.experimentName = experimentName;
     }
 
-    public void loadConfig(String config) throws Exception{
+    private void loadConfig(String config) throws Exception{
         Uri uri = Uri.parse(config);
         File file = new File(uri.getPath());
         StringBuilder text = new StringBuilder();
@@ -142,7 +142,7 @@ public class Configuration implements Parcelable {
                 int YDisplayLoc = l.getInt("YDisplayLoc");
                 int XLoc = l.getInt("XLoc");
                 int YLoc = l.getInt("YLoc");
-                landmarks.add(new Landmark(label, XDisplayLoc, YDisplayLoc, XLoc, YLoc));
+                landmarks.add(new Landmark(label, XDisplayLoc, YDisplayLoc, XLoc, YLoc, i));
             }
 
             this.setLandmarks(landmarks);
@@ -181,7 +181,7 @@ public class Configuration implements Parcelable {
         this.resultsServer = in.readString();
         this.beaconLabel = in.readString();
         this.imagePath = in.readString();
-        this.landmarks = new ArrayList<Landmark>();
+        this.landmarks = new ArrayList<>();
         in.readList(this.landmarks, Landmark.class.getClassLoader());
         this.beaconHeight = in.readInt();
         this.validConfig = in.readInt();

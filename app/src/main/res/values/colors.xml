@@ -5,4 +5,5 @@
     <color name="colorAccent">#d19a34</color>
     <color name="background_dark">#2b2b2b</color>
     <color name="text_light">#dfdfdf</color>
+    <color name="point_color">#cc2631</color>
 </resources>

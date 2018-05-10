@@ -3,17 +3,23 @@ package ca.uoguelph.pspenler.maptracker;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
@@ -35,21 +41,26 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
     private float startX = 0;
     private float startY = 0;
-    private float scaleX = 0;
-    private float scaleY = 0;
     private float translateX = 0;
     private float translateY = 0;
     private float prevTranslateX = 0;
     private float prevTranslateY = 0;
 
     Matrix scaleMatrix = new Matrix();
+    ArrayList<LandmarkXY> points;
+    int numPoints = 0;
+    Paint pointPaint;
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             Float detectedScaleFactor = detector.getScaleFactor();
-
-            scaleFactor = (detectedScaleFactor - 1) + oScaleFactor;
+            //Log.d("SCALE FACTOR", "Current:" + Float.toString(scaleFactor) + " Detected:" + Float.toString(detectedScaleFactor - 1));
+            if(oScaleFactor == 1) {
+                scaleFactor = (detectedScaleFactor - 1) + oScaleFactor;
+            }else{
+                scaleFactor = 3 * (detectedScaleFactor - 1) + oScaleFactor;
+            }
             scaleFactor = Math.max(minZoom, Math.min(maxZoom, scaleFactor));
 
             translateX = prevTranslateX + ((scaleFactor - oScaleFactor) * -1 * ((scaleGestureDetector.getFocusX() - prevTranslateX)/oScaleFactor));
@@ -78,7 +89,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 prevTranslateX = translateX;
                 prevTranslateY = translateY;
                 eventState = NONE;
-                Log.e("PREV TRANSLATES", "X:" + Float.toString(prevTranslateX) + " Y:" + Float.toString(prevTranslateY));
+                //Log.e("PREV TRANSLATES", "X:" + Float.toString(prevTranslateX) + " Y:" + Float.toString(prevTranslateY));
                 break;
             case MotionEvent.ACTION_MOVE:
                 if(eventState != ZOOM) {
@@ -88,10 +99,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 eventState = ZOOM;
-                scaleX = scaleGestureDetector.getFocusX();
-                scaleY = scaleGestureDetector.getFocusY();
                 oScaleFactor = scaleFactor;
-                Log.e("MOTION EVENT", "ACTION POINTER DOWN");
                 break;
         }
 
@@ -113,20 +121,15 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        int height = displayMetrics.heightPixels;
-
         canvas.save();
-
         scaleMatrix.setTranslate(imageScale * translateX/scaleFactor, imageScale * translateY/scaleFactor);
         scaleMatrix.postScale(scaleFactor/imageScale, scaleFactor/imageScale);
-
         canvas.setMatrix(scaleMatrix);
         canvas.drawBitmap(mBitmap, 0, 0, null);
-
+        for(int i = 0; i < numPoints; i++) {
+            canvas.drawCircle(points.get(i).getX(), points.get(i).getY(), 20, pointPaint);
+        }
         canvas.restore();
-
-        Log.d("CANVAS LOG", "X:" + Float.toString(translateX) + " Y:" + Float.toString(translateY) + " FINAL X:" + Float.toString(scaleX) + " Y:" + Float.toString(scaleY) + " S:" + Float.toString(scaleFactor) + " oS:" + Float.toString(oScaleFactor));
     }
 
     @Override
@@ -146,21 +149,51 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         setMeasuredDimension(Math.min(imageWidth, scaledWidth), Math.min(imageHeight, scaledHeight));
     }
 
-    public void setImageUri(Uri uri){
+    public void setImageUri(Uri uri, ArrayList<LandmarkXY> p){
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri);
             float aspectRatio = (float) bitmap.getHeight() / (float) bitmap.getWidth();
             DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+
             mImageWidth = displayMetrics.widthPixels;
             mImageHeight = Math.round(mImageWidth * aspectRatio);
+
             //TODO, MOVE TO BACKGROUND THREAD
             mBitmap = Bitmap.createBitmap(bitmap);
             imageScale = mBitmap.getWidth() / mImageWidth;
+
             translateY = prevTranslateY = (displayMetrics.heightPixels / 2) - (mImageHeight /2) + 60;
+
             invalidate();
             requestLayout();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        points = p;
+        numPoints = points.size();
+        pointPaint = new Paint();
+        pointPaint.setColor(getResources().getColor(R.color.point_color));
     }
+
+    public float getCanvasX(){
+        return translateX;
+    }
+
+    public float getCanvasY(){
+        return translateY;
+    }
+
+    public float getScaleFactor(){
+        return scaleFactor;
+    }
+
+    public float getImageScaleFator(){
+        return imageScale;
+    }
+
+    public float getMaxScale(){
+        return imageScale * maxZoom;
+    }
+
 }
