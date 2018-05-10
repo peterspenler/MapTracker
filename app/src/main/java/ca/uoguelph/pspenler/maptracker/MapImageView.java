@@ -3,23 +3,22 @@ package ca.uoguelph.pspenler.maptracker;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.ViewTreeObserver;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
@@ -39,6 +38,10 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private final static int ZOOM = 2;
     private int eventState;
 
+    private static final int MAX_CLICK_DURATION = 130; //Change tap length
+    private static final int MAX_TAP_DISTANCE = 30; //Change distance sensitivity
+    private long startClickTime;
+
     private float startX = 0;
     private float startY = 0;
     private float translateX = 0;
@@ -47,15 +50,15 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private float prevTranslateY = 0;
 
     Matrix scaleMatrix = new Matrix();
-    ArrayList<LandmarkXY> points;
+    ArrayList<Landmark> points;
     int numPoints = 0;
     Paint pointPaint;
+    int touchMod = 0;
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             Float detectedScaleFactor = detector.getScaleFactor();
-            //Log.d("SCALE FACTOR", "Current:" + Float.toString(scaleFactor) + " Detected:" + Float.toString(detectedScaleFactor - 1));
             if(oScaleFactor == 1) {
                 scaleFactor = (detectedScaleFactor - 1) + oScaleFactor;
             }else{
@@ -79,6 +82,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     public boolean onTouchEvent(MotionEvent event) {
         switch(event.getAction() & MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
+                startClickTime = Calendar.getInstance().getTimeInMillis();
                 if(eventState != ZOOM) {
                     eventState = PAN;
                     startX = event.getX() - prevTranslateX;
@@ -89,7 +93,37 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 prevTranslateX = translateX;
                 prevTranslateY = translateY;
                 eventState = NONE;
-                //Log.e("PREV TRANSLATES", "X:" + Float.toString(prevTranslateX) + " Y:" + Float.toString(prevTranslateY));
+
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                Log.d("CLICK", Long.toString(clickDuration));
+                if(clickDuration < MAX_CLICK_DURATION) {
+
+                    int pointX;
+                    int pointY;
+                    float dist;
+                    float canvasScale = scaleFactor/imageScale;
+                    int closeID = -1;
+                    float closeDist = 999999999;
+
+                    for(int i = 0; i < points.size(); i++){
+                        pointX = (int)prevTranslateX + (int)(canvasScale * points.get(i).getXDisplayLoc());
+                        pointY = (int)prevTranslateY + (int)(canvasScale * points.get(i).getYDisplayLoc());
+                        //Log.d("POINTS", "Point:" + Integer.toString(i) + " X:" + Integer.toString(pointX) + " Y:" + Integer.toString(pointY)+ " X:" + Float.toString(event.getX()) + " Y:" + Float.toString(event.getY()));
+                        dist = (float) Math.sqrt(Math.pow((pointX - event.getX()), 2) + Math.pow((pointY - event.getY() - touchMod), 2));
+                        //Log.e("DISTANCE", Integer.toString(i) + ": " + Float.toString(dist) + " CMP:" + Float.toString(30 * (maxZoom - 0.6f * scaleFactor)));
+                        if((dist < closeDist)&&(dist < MAX_TAP_DISTANCE)){
+                            closeDist = dist;
+                            closeID = points.get(i).getId();
+                        }
+                    }
+
+                    if(closeID != -1){
+                        Toast.makeText(getContext(), "Added point " + Integer.toString(closeID), Toast.LENGTH_SHORT).show();
+                        Log.d("REAL COORDS", "X:" + Integer.toString(points.get(closeID).getXLoc()) + " Y:" + Integer.toString(points.get(closeID).getYLoc()));
+                        DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
+                    }
+
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 if(eventState != ZOOM) {
@@ -102,7 +136,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 oScaleFactor = scaleFactor;
                 break;
         }
-
+        Log.d("TOUCH EVENT", Integer.toString(eventState));
         scaleGestureDetector.onTouchEvent(event);
 
         if((eventState == PAN) || (eventState == ZOOM)){
@@ -127,7 +161,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         canvas.setMatrix(scaleMatrix);
         canvas.drawBitmap(mBitmap, 0, 0, null);
         for(int i = 0; i < numPoints; i++) {
-            canvas.drawCircle(points.get(i).getX(), points.get(i).getY(), 20, pointPaint);
+            canvas.drawCircle(points.get(i).getXDisplayLoc(), points.get(i).getYDisplayLoc(), 20, pointPaint);
         }
         canvas.restore();
     }
@@ -149,7 +183,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         setMeasuredDimension(Math.min(imageWidth, scaledWidth), Math.min(imageHeight, scaledHeight));
     }
 
-    public void setImageUri(Uri uri, ArrayList<LandmarkXY> p){
+    public void setImageUri(Uri uri, ArrayList<Landmark> p){
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri);
             float aspectRatio = (float) bitmap.getHeight() / (float) bitmap.getWidth();
@@ -174,8 +208,21 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         numPoints = points.size();
         pointPaint = new Paint();
         pointPaint.setColor(getResources().getColor(R.color.point_color));
+
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP){
+            int actionBarHeight = 0;
+            TypedValue tv = new TypedValue();
+            if (getContext().getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
+            {
+                actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+                //Log.d("ACTIONBAR", Integer.toString(actionBarHeight));
+            }
+            touchMod = 65 + actionBarHeight;
+        }
     }
 
+    //Remove code to eliminate cursor selection
+    /*
     public float getCanvasX(){
         return translateX;
     }
@@ -194,6 +241,6 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
     public float getMaxScale(){
         return imageScale * maxZoom;
-    }
+    }*/
 
 }

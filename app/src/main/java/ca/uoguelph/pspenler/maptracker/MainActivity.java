@@ -28,9 +28,10 @@ public class MainActivity extends AppCompatActivity
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static int isConfigured = 0;
     private static Configuration configuration;
+    private static DatabaseHelper db;
 
-    private static Button experimentButton;
-    private static Button finishExperimentButton;
+    private Button experimentButton;
+    private Button finishExperimentButton;
 
     private int requestCode;
     private int grantResults[];
@@ -39,20 +40,21 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         //Drawer
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         configuration = new Configuration();
+        DatabasePool.startDatabase(this);
 
         experimentButton = findViewById(R.id.experimentButton);
         finishExperimentButton = findViewById(R.id.finishExperimentButton);
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -105,10 +107,10 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_configure) {
             // Handle the camera action
         } else if (id == R.id.nav_experiment) {
-            Toast.makeText(getApplicationContext(), "Started the gallery", Toast.LENGTH_SHORT);
+            Toast.makeText(getApplicationContext(), "Started the gallery", Toast.LENGTH_SHORT).show();
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity
         if(isConfigured == 1){
             Intent intent = new Intent(this, MapActivity.class);
             intent.putExtra("configObject", configuration);
-            startActivity(intent);
+            startActivityForResult(intent, 2);
         } else{
             Toast.makeText(MainActivity.this, "Must configure before experiment", Toast.LENGTH_SHORT).show();
         }
@@ -151,7 +153,8 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        Toast.makeText(MainActivity.this, "Yaay", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Experiment Finished", Toast.LENGTH_SHORT).show();
+                        DatabasePool.finishDb("file:///storage/emulated/0/Documents/" + configuration.getName(), getBaseContext()); //.csv is appended in finishDb()
                     }})
                 .setNegativeButton(android.R.string.no, null);
 
@@ -165,7 +168,6 @@ public class MainActivity extends AppCompatActivity
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 1: {
-
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -179,7 +181,6 @@ public class MainActivity extends AppCompatActivity
                     //app cannot function without this permission for now so close it...
                     onDestroy();
                 }
-                return;
             }
         }
     }

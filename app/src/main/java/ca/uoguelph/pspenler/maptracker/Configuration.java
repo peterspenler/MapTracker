@@ -18,6 +18,7 @@ import java.util.ArrayList;
 
 public class Configuration implements Parcelable {
     private String experimentName;
+    private String configName;
     private String configFile;
     private String resultsServer;
     private String beaconLabel;
@@ -130,7 +131,7 @@ public class Configuration implements Parcelable {
 
             String JSONData = text.toString();
             JSONObject reader = new JSONObject(JSONData);
-            this.experimentName = reader.getString("Title");
+            this.configName = reader.getString("Title");
             this.imagePath = reader.getString("ImagePath");
 
             JSONArray landmarksJSON = reader.getJSONArray("Landmarks");
@@ -166,6 +167,7 @@ public class Configuration implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.experimentName);
+        dest.writeString(this.configName);
         dest.writeString(this.configFile);
         dest.writeString(this.resultsServer);
         dest.writeString(this.beaconLabel);
@@ -177,6 +179,7 @@ public class Configuration implements Parcelable {
 
     protected Configuration(Parcel in) {
         this.experimentName = in.readString();
+        this.configName = in.readString();
         this.configFile = in.readString();
         this.resultsServer = in.readString();
         this.beaconLabel = in.readString();

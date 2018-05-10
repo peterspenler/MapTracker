@@ -28,15 +28,15 @@ public class ConfigureActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_configure);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         configuration = getIntent().getParcelableExtra("configObject");
 
-        nameEdit = (EditText) findViewById(R.id.experimentName_edit);
-        fileEdit = (EditText) findViewById(R.id.configurationFile_edit);
-        serverEdit = (EditText) findViewById(R.id.resultsServer_edit);
-        labelEdit = (EditText) findViewById(R.id.beaconLabel_edit);
-        heightEdit = (EditText) findViewById(R.id.beaconHeight_edit);
+        nameEdit = findViewById(R.id.experimentName_edit);
+        fileEdit = findViewById(R.id.configurationFile_edit);
+        serverEdit = findViewById(R.id.resultsServer_edit);
+        labelEdit = findViewById(R.id.beaconLabel_edit);
+        heightEdit = findViewById(R.id.beaconHeight_edit);
 
         nameEdit.setText(configuration.getName());
         fileEdit.setText(configuration.getConfigFile());
@@ -47,7 +47,7 @@ public class ConfigureActivity extends AppCompatActivity {
 
     public void submitConfiguration(View view) {
         try {
-            configuration.initConfig(/*nameEdit.getText().toString()*/ "EXP NAME", "file:///storage/emulated/0/Documents/config.cfg"/*fileEdit.getText().toString()*/, "http://server.htm", /*labelEdit.getText().toString()*/ "LABELNAME", heightEdit.getText().toString());
+            configuration.initConfig(/*nameEdit.getText().toString()*/ "EXP NAME", "file:///storage/emulated/0/Documents/config.cfg"/*fileEdit.getText().toString()*/, "file:///storage/emulated/0/Documents/landmarkData.csv", /*labelEdit.getText().toString()*/ "LABELNAME", heightEdit.getText().toString());
             Intent intent = new Intent();
             intent.putExtra("configObject", configuration);
             setResult(RESULT_OK, intent);

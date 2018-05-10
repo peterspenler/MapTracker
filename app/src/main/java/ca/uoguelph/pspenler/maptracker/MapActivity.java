@@ -1,7 +1,9 @@
 package ca.uoguelph.pspenler.maptracker;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
@@ -17,8 +19,9 @@ public class MapActivity extends AppCompatActivity {
     private Configuration config;
     private MapImageView mImageView;
     private Uri uri;
-    private ArrayList<LandmarkXY> points;
 
+    //REMOVE THIS CODE TO ELIMINATE CURSOR SELECTION
+    /*
     private int cursorX;
     private int cursorY;
     private int actionBarHeight;
@@ -26,6 +29,7 @@ public class MapActivity extends AppCompatActivity {
     int canvasX;
     int canvasY;
     float canvasScale;
+    */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +39,18 @@ public class MapActivity extends AppCompatActivity {
 
         config = getIntent().getParcelableExtra("configObject");
         uri = Uri.parse(config.getImagePath());
-        pinchZoomPan();
+
+        mImageView.setImageUri(uri, config.getLandmarks());
+
+        final ImageView cursor = findViewById(R.id.cursor);
+        cursor.setVisibility(View.GONE);
+
+        final FloatingActionButton fab = findViewById(R.id.addDataPointButton);
+        fab.setVisibility(View.GONE);
+
+
+        //REMOVE THIS CODE TO ELIMINATE CURSOR SELECTION
+        /*
 
         //Get actionbar height
         TypedValue tv = new TypedValue();
@@ -45,7 +60,6 @@ public class MapActivity extends AppCompatActivity {
             //Log.d("ACTIONBAR", Integer.toString(actionBarHeight));
         }
 
-        final ImageView cursor = findViewById(R.id.cursor);
         cursor.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -53,23 +67,25 @@ public class MapActivity extends AppCompatActivity {
                 int width = cursor.getWidth();
                 int x = cursor.getLeft();
                 int y = cursor.getTop();
-                Log.e("CURSOR POS", "X:" + Integer.toString(x + (width / 2)) + " Y:" + Integer.toString(y + (height / 2) + 65 + actionBarHeight));
+                //Log.e("CURSOR POS", "X:" + Integer.toString(x + (width / 2)) + " Y:" + Integer.toString(y + (height / 2) + 65 + actionBarHeight));
                 cursorX = x + (width / 2);
-                cursorY = y + (height / 2) + 65 + actionBarHeight;
-            }
-        });
-    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
+                    cursorY = y + (height / 2);
+                } else{
+                    cursorY = y + (height / 2) + 65 + actionBarHeight;
+                }
 
-    private void pinchZoomPan(){
-        points = createPoints(config.getLandmarks());
-        mImageView.setImageUri(uri, points);
+            }
+        });*/
     }
 
     public void addDataPoint(View view) {
+        //REMOVE THIS CODE TO ELIMINATE CURSOR SELECTION
+        /*
         canvasX = (int) mImageView.getCanvasX();
         canvasY = (int) mImageView.getCanvasY();
         canvasScale = mImageView.getScaleFactor() / mImageView.getImageScaleFator();
-        Log.d("CANVAS",  "X:" + Integer.toString(canvasX) + " Y:" + Integer.toString(canvasY) + " S;" + Float.toString(canvasScale));
+        //Log.d("CANVAS",  "X:" + Integer.toString(canvasX) + " Y:" + Integer.toString(canvasY) + " S;" + Float.toString(canvasScale));
 
         int pointX;
         int pointY;
@@ -80,9 +96,9 @@ public class MapActivity extends AppCompatActivity {
         for(int i = 0; i < points.size(); i++){
             pointX = canvasX + (int)(canvasScale * points.get(i).getX());
             pointY = canvasY + (int)(canvasScale * points.get(i).getY());
-            Log.d("POINTS", "Point:" + Integer.toString(i) + " X:" + Integer.toString(pointX) + " Y:" + Integer.toString(pointY)+ " X:" + Integer.toString(cursorX) + " Y:" + Integer.toString(cursorY));
+            //Log.d("POINTS", "Point:" + Integer.toString(i) + " X:" + Integer.toString(pointX) + " Y:" + Integer.toString(pointY)+ " X:" + Integer.toString(cursorX) + " Y:" + Integer.toString(cursorY));
             dist = (float) Math.sqrt(Math.pow((pointX - cursorX), 2) + Math.pow((pointY - cursorY), 2));
-            Log.e("DISTANCE", Integer.toString(i) + ": " + Float.toString(dist) + " CMP:" + Float.toString(50 * canvasScale));
+            //Log.e("DISTANCE", Integer.toString(i) + ": " + Float.toString(dist) + " CMP:" + Float.toString(50 * canvasScale));
             if((dist < closeDist)&&(dist < 25)){
                 closeDist = dist;
                 closeID = points.get(i).getId();
@@ -93,14 +109,6 @@ public class MapActivity extends AppCompatActivity {
             Toast.makeText(this, "Added point " + Integer.toString(closeID), Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "No point found", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private ArrayList<LandmarkXY> createPoints(ArrayList<Landmark> l){
-        ArrayList<LandmarkXY> points = new ArrayList<>();
-        for(int i = 0; i < l.size(); i++) {
-            points.add(new LandmarkXY(l.get(i).getXDisplayLoc(), l.get(i).getYDisplayLoc(), l.get(i).getId()));
-        }
-        return points;
+        }*/
     }
 }
