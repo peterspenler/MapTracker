@@ -70,6 +70,7 @@ JSON Format:
 ```
 {
   "Experiment Name": "<>",
+  "SubmissionDatetime": "<Rfc3339datetime>",
   "Configuration File": "<>",
   "Beacon Label": "<>",
   "Beacon Height": <number in metres>,
@@ -115,6 +116,8 @@ This means we will have 3 files for each run.
 The config file will have
 ```
 {
+  "SubmissionDatetime": "<Rfc3339datetime>",
+  "ReceiveDatetime": "<Rfc3339datetime>"
   "Experiment Name": "<>",
   "Configuration File": "<>",
   "Beacon Label": "<>",
