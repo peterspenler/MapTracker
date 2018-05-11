@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.os.Environment;
 import android.util.Log;
 
 import com.opencsv.CSVWriter;
@@ -21,26 +20,26 @@ import java.util.TimeZone;
 
 public final class DatabaseHelper extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "experiment_data.db";
-    private static final String LANDMARK_TABLE_NAME = "landmark_table";
-    private static final String ACCELEROMETER_TABLE_NAME = "accelerometer_table";
+    private static final String LANDMARK_TABLE_NAME = "position_log";
+    private static final String ACCELEROMETER_TABLE_NAME = "acceleration_log";
 
     private static final String DATETIME = "datetime";
     private static final String REALX = "realX";
     private static final String REALY = "realY";
 
-    public static final String REALXA = "realXAcc";
-    public static final String REALYA = "realYAcc";
-    public static final String REALZA = "realZAcc";
+    private static final String REALXA = "realXAcc";
+    private static final String REALYA = "realYAcc";
+    private static final String REALZA = "realZAcc";
 
 
     DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, 2);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(DATETIME TEXT PRIMARY KEY, REALX INTEGER, REALY INTEGER)");
-        db.execSQL("create table " + ACCELEROMETER_TABLE_NAME + "(DATETIME TEXT PRIMARY KEY, REALXA INTEGER, REALYA INTEGER, REALZA INTEGER)");
+        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " INTEGER, " + REALY + " INTEGER)");
+        db.execSQL("create table " + ACCELEROMETER_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALXA + " FLOAT, " + REALYA + " FLOAT, " + REALZA + " FLOAT)");
     }
 
     @Override
@@ -49,54 +48,72 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         onCreate(db);
     }
 
-    public boolean insertLandmarkData(int realX, int realY){
+    private String getDatetime(){
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String date = dateFormat.format(new Date());
+        return dateFormat.format(new Date());
+    }
+
+    public boolean insertLandmarkData(int realX, int realY){
         SQLiteDatabase db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(DATETIME, date);
+        contentValues.put(DATETIME, getDatetime());
         contentValues.put(REALX, realX);
         contentValues.put(REALY, realY);
         long result = db.insert(LANDMARK_TABLE_NAME, null, contentValues);
         if(result == -1){
             return false;
         }
-
-        Cursor cursor = db.rawQuery("select * from " + LANDMARK_TABLE_NAME, null);
-        if(cursor != null && cursor.moveToFirst()) {
-            do {
-                Log.d("DATETIME", cursor.getString(cursor.getColumnIndex("DATETIME")));
-                Log.d("REALX", cursor.getString(cursor.getColumnIndex("REALX")));
-                Log.d("REALY", cursor.getString(cursor.getColumnIndex("REALY")));
-
-
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
         return true;
     }
 
-    public void finishDatabse(Uri uri){
-        File file = new File(uri.getPath());
-        try
-        {
-            file.createNewFile();
-            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-            SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
-            Cursor curCSV = db.rawQuery("SELECT * FROM " + LANDMARK_TABLE_NAME,null);
-            csvWrite.writeNext(curCSV.getColumnNames());
-            while(curCSV.moveToNext())
-            {
-                String arrStr[] ={curCSV.getString(0),curCSV.getString(1), curCSV.getString(2)};
-                csvWrite.writeNext(arrStr);
-            }
-            csvWrite.close();
-            curCSV.close();
+    public boolean insertAccelData(float realX, float realY, float realZ){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DATETIME, getDatetime());
+        contentValues.put(REALXA, realX);
+        contentValues.put(REALYA, realY);
+        contentValues.put(REALZA, realZ);
+        long result = db.insert(ACCELEROMETER_TABLE_NAME, null, contentValues);
+        if(result == -1){
+            return false;
         }
-        catch(Exception sqlEx)
-        {
-            Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
+        return true;
+    }
+
+    public void finishDatabse(Configuration config, int fileNum){
+        Uri uri;
+        File file;
+        String tableName = LANDMARK_TABLE_NAME;
+        for(int i = 0; i < 2; i++) {
+            if (fileNum == 0) {
+                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_" + tableName + ".csv");
+                file = new File(uri.getPath());
+            } else {
+                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_" + tableName + Integer.toString(fileNum) + ".csv");
+                file = new File(uri.getPath());
+            }
+            try {
+                CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+                SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
+                Cursor curCSV = db.rawQuery("SELECT * FROM " + tableName, null);
+                csvWrite.writeNext(curCSV.getColumnNames());
+                while (curCSV.moveToNext()) {
+                    if(i == 0) {
+                        String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
+                        csvWrite.writeNext(arrStr, false);
+                    }
+                    if(i == 1){
+                        String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2), curCSV.getString(3)};
+                        csvWrite.writeNext(arrStr, false);
+                    }
+                }
+                csvWrite.close();
+                curCSV.close();
+            } catch (Exception sqlEx) {
+                Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
+            }
+            tableName = ACCELEROMETER_TABLE_NAME;
         }
     }
 }

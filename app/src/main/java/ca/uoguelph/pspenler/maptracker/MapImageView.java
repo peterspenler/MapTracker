@@ -10,7 +10,6 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -95,7 +94,6 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 eventState = NONE;
 
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
-                Log.d("CLICK", Long.toString(clickDuration));
                 if(clickDuration < MAX_CLICK_DURATION) {
 
                     int pointX;
@@ -108,9 +106,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                     for(int i = 0; i < points.size(); i++){
                         pointX = (int)prevTranslateX + (int)(canvasScale * points.get(i).getXDisplayLoc());
                         pointY = (int)prevTranslateY + (int)(canvasScale * points.get(i).getYDisplayLoc());
-                        //Log.d("POINTS", "Point:" + Integer.toString(i) + " X:" + Integer.toString(pointX) + " Y:" + Integer.toString(pointY)+ " X:" + Float.toString(event.getX()) + " Y:" + Float.toString(event.getY()));
                         dist = (float) Math.sqrt(Math.pow((pointX - event.getX()), 2) + Math.pow((pointY - event.getY() - touchMod), 2));
-                        //Log.e("DISTANCE", Integer.toString(i) + ": " + Float.toString(dist) + " CMP:" + Float.toString(30 * (maxZoom - 0.6f * scaleFactor)));
                         if((dist < closeDist)&&(dist < MAX_TAP_DISTANCE)){
                             closeDist = dist;
                             closeID = points.get(i).getId();
@@ -119,7 +115,6 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
 
                     if(closeID != -1){
                         Toast.makeText(getContext(), "Added point " + Integer.toString(closeID), Toast.LENGTH_SHORT).show();
-                        Log.d("REAL COORDS", "X:" + Integer.toString(points.get(closeID).getXLoc()) + " Y:" + Integer.toString(points.get(closeID).getYLoc()));
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
                     }
 
@@ -136,7 +131,6 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                 oScaleFactor = scaleFactor;
                 break;
         }
-        Log.d("TOUCH EVENT", Integer.toString(eventState));
         scaleGestureDetector.onTouchEvent(event);
 
         if((eventState == PAN) || (eventState == ZOOM)){
@@ -207,7 +201,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         points = p;
         numPoints = points.size();
         pointPaint = new Paint();
-        pointPaint.setColor(getResources().getColor(R.color.point_color));
+        pointPaint.setColor(getResources().getColor(R.color.colorAccent));
 
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP){
             int actionBarHeight = 0;
@@ -215,32 +209,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
             if (getContext().getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
             {
                 actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-                //Log.d("ACTIONBAR", Integer.toString(actionBarHeight));
             }
             touchMod = 65 + actionBarHeight;
         }
     }
-
-    //Remove code to eliminate cursor selection
-    /*
-    public float getCanvasX(){
-        return translateX;
-    }
-
-    public float getCanvasY(){
-        return translateY;
-    }
-
-    public float getScaleFactor(){
-        return scaleFactor;
-    }
-
-    public float getImageScaleFator(){
-        return imageScale;
-    }
-
-    public float getMaxScale(){
-        return imageScale * maxZoom;
-    }*/
-
 }

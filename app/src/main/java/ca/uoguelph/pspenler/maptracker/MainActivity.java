@@ -25,7 +25,6 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static int isConfigured = 0;
     private static Configuration configuration;
     private static DatabaseHelper db;
@@ -116,7 +115,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void launchConfiguration(View view) {
-        Log.d(LOG_TAG, "Configure button pressed");
         Intent intent = new Intent(this, ConfigureActivity.class);
         intent.putExtra("configObject", configuration);
         startActivityForResult(intent, 1);
@@ -148,13 +146,15 @@ public class MainActivity extends AppCompatActivity
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogStyle);
 
         builder.setTitle("Finish experiment")
-                .setMessage("This will reset the configuration and write the experimental data. Continue?")
+                .setMessage("This will finish the experiment and save the experimental data. Continue?")
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int whichButton) {
                         Toast.makeText(MainActivity.this, "Experiment Finished", Toast.LENGTH_SHORT).show();
-                        DatabasePool.finishDb("file:///storage/emulated/0/Documents/" + configuration.getName(), getBaseContext()); //.csv is appended in finishDb()
+                        DatabasePool.finishDb(configuration, getBaseContext());
+                        experimentButton.setVisibility(View.GONE);
+                        finishExperimentButton.setVisibility(View.GONE);
                     }})
                 .setNegativeButton(android.R.string.no, null);
 
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity
 
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.uujm
-                    Toast.makeText(MainActivity.this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
                     //app cannot function without this permission for now so close it...
                     onDestroy();
                 }
