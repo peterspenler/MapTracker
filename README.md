@@ -25,11 +25,12 @@ Suggested Activities
 The configuration screen should have fields for the following information
 - Experiment Name
 - Configuration File (used to load the map, landmark data)
+  - Allow this to be a url (if starts with http:// or https://)
 - Results Server
 - Beacon Label
 - Beacon Height
-- Start Experiment Button
-The app should check if the experiment has been run yet by searching for the files of a previous run of the same name and give and force the user to fix it before moving on.
+- Start Experiment Button 
+  - The app should check if the experiment has been run yet by searching for the files of a previous run of the same name and give and force the user to fix it before moving on.
 All fields are required.
 
 #### Experiment Screen
@@ -61,8 +62,76 @@ We are going to likely dump all the experiment data to a file, or set of files o
 Prefix all files with the experiment name followed by the beacon label.
 Like: `experiment1_beaconA_<positions|acceleration>.csv`
 Dump the two databases to a CSV file with the headings from the database.
-#### Future Work
-Use the Results Server to upload the data, the data will be sent in JSON format. If we get this far we can discuss this later.
+
+### Upload Server
+On completion the data should be uploaded to the ResultsServer address, i.e. `"http://example.com:<port>/results"` make this dynamic as per the configuration file. Use a HTTP post.
+
+JSON Format:
+```
+{
+  "Experiment Name": "<>",
+  "Configuration File": "<>",
+  "Beacon Label": "<>",
+  "Beacon Height": <number in metres>,
+  "PositionLog": [
+  {
+    "Datetime": "<RFC3339 Datetime>",
+    "Data": [<xreal>, <yreal>]
+  },
+  {
+    "Datetime": "<RFC3339 Datetime>",
+    "Data": [<xreal>, <yreal>]
+  }],
+  "AccelerometerData": [
+  {
+    "Datetime": "<RFC3339 Datatime>",
+    "Data": [<xacc>, <yacc>, <zacc>]
+  },
+  {
+    "Datetime": "<RFC3339 Datatime>",
+    "Data": [<xacc>, <yacc>, <zacc>]
+  }]
+}
+```
+
+After posting to the server, the server should respond with a 
+
+```
+{
+  "Success": true
+}
+// or
+{
+  "Success": false,
+  "Error": "any error"
+}
+```
+
+Which should be handled on the app side.
+
+We would like to put these back into CSV format once they get to the server but the other data (Experiment Name, Configuration File, ...) wont be able to be put into the same CSV file, for that problem simply export that section as JSON to a different file. 
+This means we will have 3 files for each run.
+`experiment1_beaconA_<positions|acceleration|config>.csv`
+The config file will have
+```
+{
+  "Experiment Name": "<>",
+  "Configuration File": "<>",
+  "Beacon Label": "<>",
+  "Beacon Height": <number in metres>
+}
+```
+
+This may be redunant but should be easy to implement and easier to machine-read from a Python environment.
+
+#### Security of server
+At this step we need to ensure the user doesn't upload a file that tricks our server into saving a file to a directory outside our application. 
+It possible that the user can upload a experiment called "../../../../etc/passwd" and prevents us from accessing our server.
+If you have time ensure the user cannot save files with ".." in them.
+I'm not sure if stripping ".." is sufficient.
+It is acceptable to make the server and client not accept any experiments or beacon names with non alphanumeric characters [A-Za-z0-9]+.
+Please also ensure the user doesn't upload a file with a blank field.
+So needless to say, the same confirmation of fields should be done on the client app and the server side.
 
 ### Configuration File
 The configuration file is a JSON file with the following schema
@@ -90,9 +159,10 @@ The configuration file is a JSON file with the following schema
 }
 ```
 
-ImagePath may in the future be expanded to be a URL instead of a file, similar with the configuration file, (to make things easier);
+- ImagePath should be able to be a URL instead of a file, similar with the configuration file, (to make things easier);
 so you should design the app to use a file relative to the external storage if the first characters in the value string of that field if it starts with `file://`.
-The XDisplayLoc and XLoc reflect that the map may not be to scale. 
-Important: The XLoc and YLoc should be the values recorded not the pixel location.
-The pixel locations should be relative to the image not the display, for obvious reasons.
-The landmarks can be placed in their location based on any coordinate system (often people use 0,0 as either the bottom left or top left), make 0,0 the top left.
+- The ImagePath and Configuration File can be simple HTTP GET documents so we can host them on any webserver.
+- The XDisplayLoc and XLoc reflect that the map may not be to scale. 
+- Important: The XLoc and YLoc should be the values recorded not the pixel location.
+- he pixel locations should be relative to the image not the display, for obvious reasons.
+- The landmarks can be placed in their location based on any coordinate system (often people use 0,0 as either the bottom left or top left), make 0,0 the top left.
