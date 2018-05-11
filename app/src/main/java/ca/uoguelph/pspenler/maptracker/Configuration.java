@@ -127,6 +127,8 @@ public class Configuration implements Parcelable {
 
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
+    public void invalidate(){ this.validConfig = 0; }
+
     private void loadConfig(String config){
         configLoaded = 0;
 

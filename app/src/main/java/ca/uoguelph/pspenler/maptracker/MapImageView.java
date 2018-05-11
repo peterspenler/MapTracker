@@ -1,21 +1,28 @@
 package ca.uoguelph.pspenler.maptracker;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -181,26 +188,22 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         setMeasuredDimension(Math.min(imageWidth, scaledWidth), Math.min(imageHeight, scaledHeight));
     }
 
-    public void setImageUri(Uri uri, ArrayList<Landmark> p){
-        try {
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri);
-            float aspectRatio = (float) bitmap.getHeight() / (float) bitmap.getWidth();
-            DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+    public void setImageUri(Bitmap bitmap, ArrayList<Landmark> p) throws NullPointerException{
 
-            mImageWidth = displayMetrics.widthPixels;
-            mImageHeight = Math.round(mImageWidth * aspectRatio);
+        float aspectRatio = (float) bitmap.getHeight() / (float) bitmap.getWidth();
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 
-            //TODO, MOVE TO BACKGROUND THREAD
-            mBitmap = Bitmap.createBitmap(bitmap);
-            imageScale = mBitmap.getWidth() / mImageWidth;
+        mImageWidth = displayMetrics.widthPixels;
+        mImageHeight = Math.round(mImageWidth * aspectRatio);
 
-            translateY = prevTranslateY = (displayMetrics.heightPixels / 2) - (mImageHeight /2) + 60;
+        //TODO, MOVE TO BACKGROUND THREAD
+        mBitmap = Bitmap.createBitmap(bitmap);
+        imageScale = mBitmap.getWidth() / mImageWidth;
 
-            invalidate();
-            requestLayout();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        translateY = prevTranslateY = (displayMetrics.heightPixels / 2) - (mImageHeight /2) + 60;
+
+        invalidate();
+        requestLayout();
 
         points = p;
         numPoints = points.size();

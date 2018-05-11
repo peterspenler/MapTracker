@@ -140,6 +140,12 @@ public class MainActivity extends AppCompatActivity
                 finishExperimentButton.setVisibility(View.VISIBLE);
             }
         }
+        if(requestCode == 2){
+            if(resultCode == RESULT_CANCELED){
+                experimentButton.setVisibility(View.GONE);
+                finishExperimentButton.setVisibility(View.GONE);
+            }
+        }
     }
 
     public void finishExperiment(View view) {

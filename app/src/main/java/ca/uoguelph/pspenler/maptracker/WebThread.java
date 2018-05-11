@@ -109,8 +109,5 @@ public class WebThread extends Thread {
 
         msg.setData(b);
         handler.dispatchMessage(msg);
-        Log.d("MESSAGE", "SENT");
-
-        //super.run();
     }
 }
