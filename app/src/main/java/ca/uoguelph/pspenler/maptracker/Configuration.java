@@ -1,6 +1,11 @@
 package ca.uoguelph.pspenler.maptracker;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -14,6 +19,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class Configuration implements Parcelable {
@@ -26,6 +34,8 @@ public class Configuration implements Parcelable {
     private ArrayList<Landmark> landmarks;
     private int beaconHeight;
     private int validConfig;
+    private int configLoaded;
+    private String errorMsg = "";
 
     Configuration(){
         experimentName = "";
@@ -48,12 +58,14 @@ public class Configuration implements Parcelable {
 
         //Checks that config file exists
 
-        try{
-            loadConfig(confFile);
-            configFile = confFile;
-        }catch(Exception e){
-            throw new Exception(e.getMessage());
+
+        loadConfig(confFile);
+        while(configLoaded == 0);
+        if(configLoaded == 2){
+            throw new Exception(errorMsg);
         }
+        configFile = confFile;
+
 
         resultsServer = server;
 
@@ -111,51 +123,40 @@ public class Configuration implements Parcelable {
         this.landmarks = landmarks;
     }
 
-    public void setExperimentName(String experimentName) {
-        this.experimentName = experimentName;
-    }
+    public void setConfigName(String configName) { this.configName = configName; }
 
-    private void loadConfig(String config) throws Exception{
-        Uri uri = Uri.parse(config);
-        File file = new File(uri.getPath());
-        StringBuilder text = new StringBuilder();
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
-        try{
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-            while((line = br.readLine()) != null){
-                text.append(line);
-                text.append("\n");
+    private void loadConfig(String config){
+        configLoaded = 0;
+
+        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
+
+            public void handleMessage(Message msg) {
+                Log.d("Message", "received");
+                Bundle b;
+                if(msg.what == 1){
+                    Log.e("Message", "TYPE 1");
+                    b = msg.getData();
+
+                    configName = b.getString("configName");
+                    imagePath = b.getString("imagePath");
+                    landmarks = b.getParcelableArrayList("landmarks");
+                    configLoaded = 1;
+                }
+                if(msg.what == 2){
+                    Log.e("Message", "TYPE 2");
+                    b = msg.getData();
+
+                    errorMsg = b.getString("errorMsg");
+                    configLoaded = 2;
+                }
+                super.handleMessage(msg);
             }
-            br.close();
+        };
 
-            String JSONData = text.toString();
-            JSONObject reader = new JSONObject(JSONData);
-            this.configName = reader.getString("Title");
-            this.imagePath = reader.getString("ImagePath");
-
-            JSONArray landmarksJSON = reader.getJSONArray("Landmarks");
-            ArrayList<Landmark> landmarks = new ArrayList<>();
-            for(int i = 0; i < landmarksJSON.length(); i++){
-                JSONObject l = landmarksJSON.getJSONObject(i);
-                String label = l.getString("Label");
-                int XDisplayLoc = l.getInt("XDisplayLoc");
-                int YDisplayLoc = l.getInt("YDisplayLoc");
-                int XLoc = l.getInt("XLoc");
-                int YLoc = l.getInt("YLoc");
-                landmarks.add(new Landmark(label, XDisplayLoc, YDisplayLoc, XLoc, YLoc, i));
-            }
-
-            this.setLandmarks(landmarks);
-
-        } catch (FileNotFoundException e) {
-            Log.e("FILE NOT FOUND", e.getMessage());
-            throw new Exception("Config file does not exist");
-        } catch (IOException e) {
-            throw new Exception("Config file IO error");
-        } catch (JSONException e) {
-            throw new Exception("Config file is not valid JSON");
-        }
+        Thread thread = new WebThread(mHandler, config);
+        thread.start();
     }
 
 

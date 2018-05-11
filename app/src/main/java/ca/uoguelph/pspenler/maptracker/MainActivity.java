@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity
                 } else {
 
                     // permission denied, boo! Disable the
-                    // functionality that depends on this permission.uujm
+                    // functionality that depends on this permission
                     Toast.makeText(this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
                     //app cannot function without this permission for now so close it...
                     onDestroy();
