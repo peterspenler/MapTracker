@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 public class AccelerometerHandler implements SensorEventListener{
     private Sensor accelerometer;
@@ -23,6 +24,7 @@ public class AccelerometerHandler implements SensorEventListener{
     @Override
     public void onSensorChanged(SensorEvent event) {
         DatabasePool.getDb().insertAccelData(event.values[0], event.values[1], event.values[2]);
+        Log.d("ACCEL", Float.toString(event.values[0]));
     }
 
     @Override

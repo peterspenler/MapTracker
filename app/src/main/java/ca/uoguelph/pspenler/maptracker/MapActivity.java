@@ -10,7 +10,6 @@ public class MapActivity extends AppCompatActivity {
     private Configuration config;
     private MapImageView mImageView;
     private Uri uri;
-    private AccelerometerHandler accelHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,13 +21,11 @@ public class MapActivity extends AppCompatActivity {
         uri = Uri.parse(config.getImagePath());
 
         mImageView.setImageUri(uri, config.getLandmarks());
-        accelHandler = new AccelerometerHandler(this);
     }
 
     @Override
     public void onBackPressed() {
-        accelHandler.close();
-        accelHandler = null;
+        mImageView.closeAccelMonitor();
         super.onBackPressed();
     }
 }

@@ -87,10 +87,10 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         String tableName = LANDMARK_TABLE_NAME;
         for(int i = 0; i < 2; i++) {
             if (fileNum == 0) {
-                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_" + tableName + ".csv");
+                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_<" + tableName + ">.csv");
                 file = new File(uri.getPath());
             } else {
-                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_" + tableName + Integer.toString(fileNum) + ".csv");
+                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_<" + tableName + ">" + Integer.toString(fileNum) + ".csv");
                 file = new File(uri.getPath());
             }
             try {

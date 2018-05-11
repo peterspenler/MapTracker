@@ -31,6 +31,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private float oScaleFactor = 1;
     private float imageScale = 1;
     private ScaleGestureDetector scaleGestureDetector;
+    private AccelerometerHandler accelHandler;
 
     private final static int NONE = 0;
     private final static int PAN = 1;
@@ -116,6 +117,9 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                     if(closeID != -1){
                         Toast.makeText(getContext(), "Added point " + Integer.toString(closeID), Toast.LENGTH_SHORT).show();
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
+                        if(accelHandler == null) {
+                            accelHandler = new AccelerometerHandler(getContext());
+                        }
                     }
 
                 }
@@ -212,5 +216,12 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
             }
             touchMod = 65 + actionBarHeight;
         }
+    }
+
+    public void closeAccelMonitor(){
+        if(accelHandler != null) {
+            accelHandler.close();
+        }
+        accelHandler = null;
     }
 }
