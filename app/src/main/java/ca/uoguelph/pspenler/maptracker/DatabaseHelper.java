@@ -10,6 +10,10 @@ import android.util.Log;
 
 import com.opencsv.CSVWriter;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.text.DateFormat;
@@ -50,7 +54,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
 
     private String getDatetime(){
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dateFormat.setTimeZone(TimeZone.getDefault());
         return dateFormat.format(new Date());
     }
 
@@ -115,5 +119,54 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
             }
             tableName = ACCELEROMETER_TABLE_NAME;
         }
+    }
+
+    public JSONArray JSONPositionArray(){
+        JSONArray ja = new JSONArray();
+        try {
+            SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + LANDMARK_TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                JSONObject jo = new JSONObject();
+                jo.put("Datetime", cursor.getString(0));
+
+                JSONArray da = new JSONArray();
+                da.put(cursor.getFloat(1));
+                da.put(cursor.getFloat(2));
+
+                jo.put("Data", da);
+
+                ja.put(jo);
+            }
+            cursor.close();
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        return ja;
+    }
+
+    public JSONArray JSONAccelerometerArray(){
+        JSONArray ja = new JSONArray();
+        try {
+            SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + ACCELEROMETER_TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                JSONObject jo = new JSONObject();
+                jo.put("Datetime", cursor.getString(0));
+
+                JSONArray da = new JSONArray();
+                da.put(cursor.getFloat(1));
+                da.put(cursor.getFloat(2));
+                da.put(cursor.getFloat(3));
+
+                jo.put("Data", da);
+
+                ja.put(jo);
+            }
+            cursor.close();
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        return ja;
     }
 }

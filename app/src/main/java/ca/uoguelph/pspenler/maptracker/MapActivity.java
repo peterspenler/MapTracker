@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Toast;
 
 
@@ -56,7 +55,7 @@ public class MapActivity extends AppCompatActivity {
 
         Thread thread = new BitmapLoader(config.getImagePath(),this,mHandler);
         thread.start();
-        while(imageLoaded == 0);
+        while(thread.isAlive());
 
         if(imageLoaded == 2){
             Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();

@@ -37,13 +37,13 @@ public class ConfigureActivity extends AppCompatActivity {
         serverEdit.setText(configuration.getResultsServer());
         labelEdit.setText(configuration.getBeaconLabel());
         if(configuration.getBeaconHeight() != 0) {
-            heightEdit.setText(Integer.toString(configuration.getBeaconHeight()));
+            heightEdit.setText(Float.toString(configuration.getBeaconHeight()));
         }
     }
 
     public void submitConfiguration(View view) {
         try {
-            configuration.initConfig(nameEdit.getText().toString(), /*"file:///storage/emulated/0/Documents/config.cfg"*/fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
+            configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
             Intent intent = new Intent();
             intent.putExtra("configObject", configuration);
             setResult(RESULT_OK, intent);

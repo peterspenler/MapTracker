@@ -32,7 +32,7 @@ public class Configuration implements Parcelable {
     private String beaconLabel;
     private String imagePath;
     private ArrayList<Landmark> landmarks;
-    private int beaconHeight;
+    private float beaconHeight;
     private int validConfig;
     private int configLoaded;
     private String errorMsg = "";
@@ -53,21 +53,30 @@ public class Configuration implements Parcelable {
         if(name.equals("")) {
             throw new Exception("Experiment name cannot be empty");
         }else {
-            experimentName = name;
+            if(name.contains("/")){
+                throw new Exception("Experiment name cannot contain '/' characters");
+            } else {
+                experimentName = name;
+            }
         }
 
         //Checks that config file exists
 
 
         loadConfig(confFile);
-        while(configLoaded == 0);
         if(configLoaded == 2){
             throw new Exception(errorMsg);
         }
         configFile = confFile;
 
+        if(server.equals("")) {
+            throw new Exception("Results server address cannot be empty");
+        } else if (!MainActivity.hasInternetAccess(server)){
+            throw new Exception("Inputted results server not available");
+        } else{
+            resultsServer = server;
+        }
 
-        resultsServer = server;
 
         //Checks that beacon label is not empty
         if(label.equals("")) {
@@ -76,12 +85,12 @@ public class Configuration implements Parcelable {
             beaconLabel = label;
         }
 
-        //Checks that beacon height is an integer
+        //Checks that beacon height is an float
         try{
-            beaconHeight = Integer.parseInt(height);
+            beaconHeight = Float.parseFloat(height);
         }
         catch(Exception e){
-            throw new Exception("Beacon height is not an integer");
+            throw new Exception("Beacon height is not an valid number");
         }
 
         validConfig = 1;
@@ -107,7 +116,7 @@ public class Configuration implements Parcelable {
         return beaconLabel;
     }
 
-    public int getBeaconHeight(){
+    public float getBeaconHeight(){
         return beaconHeight;
     }
 
@@ -159,6 +168,7 @@ public class Configuration implements Parcelable {
 
         Thread thread = new WebThread(mHandler, config);
         thread.start();
+        while(thread.isAlive());
     }
 
 
@@ -176,7 +186,7 @@ public class Configuration implements Parcelable {
         dest.writeString(this.beaconLabel);
         dest.writeString(this.imagePath);
         dest.writeList(this.landmarks);
-        dest.writeInt(this.beaconHeight);
+        dest.writeFloat(this.beaconHeight);
         dest.writeInt(this.validConfig);
     }
 
@@ -189,7 +199,7 @@ public class Configuration implements Parcelable {
         this.imagePath = in.readString();
         this.landmarks = new ArrayList<>();
         in.readList(this.landmarks, Landmark.class.getClassLoader());
-        this.beaconHeight = in.readInt();
+        this.beaconHeight = in.readFloat();
         this.validConfig = in.readInt();
     }
 

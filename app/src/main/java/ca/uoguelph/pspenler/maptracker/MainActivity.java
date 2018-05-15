@@ -1,11 +1,13 @@
 package ca.uoguelph.pspenler.maptracker;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -21,6 +23,12 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -34,6 +42,7 @@ public class MainActivity extends AppCompatActivity
 
     private int requestCode;
     private int grantResults[];
+    private static boolean hasInternet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +108,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -149,7 +158,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void finishExperiment(View view) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogStyle);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogStyle);
 
         builder.setTitle("Finish experiment")
                 .setMessage("This will finish the experiment and save the experimental data. Continue?")
@@ -157,10 +166,7 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        Toast.makeText(MainActivity.this, "Experiment Finished", Toast.LENGTH_SHORT).show();
-                        DatabasePool.finishDb(configuration, getBaseContext());
-                        experimentButton.setVisibility(View.GONE);
-                        finishExperimentButton.setVisibility(View.GONE);
+                        sendToServer();
                     }})
                 .setNegativeButton(android.R.string.no, null);
 
@@ -171,7 +177,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override // android recommended class to handle permissions
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
                 // If request is cancelled, the result arrays are empty.
@@ -189,5 +195,67 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
+    }
+
+    public void sendToServer(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle).setMessage("Saving to server...").setIcon(android.R.drawable.ic_menu_send).setPositiveButton("Ok", null).setTitle("");
+        AlertDialog uploadDialog = builder.create();
+        uploadDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
+        uploadDialog.show();
+
+        try {
+            int resultCode = ResultsPoster.post(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"), configuration); //Saves to server
+            uploadDialog.setTitle("Upload Result");
+            uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
+            if(resultCode == 201) {
+                DatabasePool.finishDb(configuration, getBaseContext(), 1);
+                uploadDialog.setMessage("Success!");
+                //Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_SHORT).show();
+                experimentButton.setVisibility(View.GONE);
+                finishExperimentButton.setVisibility(View.GONE);
+            } else if(resultCode == 409) {
+                uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
+            } else if((resultCode == 404) || (resultCode == 0)){
+                if(!hasInternetAccess("http://clients3.google.com/generate_204")){
+                    uploadDialog.setMessage("No internet connection. Please check network settings");
+                } else if(configuration.getName().contains("/")){
+                    uploadDialog.setMessage("The experiment name is invalid. Please remove any '/' characters from the experiment name");
+                } else{
+                    uploadDialog.setMessage("Invalid results server");
+                }
+                uploadDialog.setMessage("The experiment name is invalid. Please change the name in the configuration");
+            } else if(resultCode == 412){
+                uploadDialog.setMessage("The submission has empty or invalid values and cannot be accepted. Please check the configuration");
+            } else{
+                uploadDialog.setMessage("RESULT CODE: " + Integer.toString(resultCode));
+            }
+        }catch(UnsupportedEncodingException e){
+            Toast.makeText(MainActivity.this, "Encoding error, check experiment name", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean hasInternetAccess(final String url) {
+        hasInternet = false;
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    HttpURLConnection urlc = (HttpURLConnection) (new URL(url).openConnection());
+                    urlc.setRequestProperty("User-Agent", "Android");
+                    urlc.setRequestProperty("Connection", "close");
+                    urlc.setConnectTimeout(1500);
+                    urlc.connect();
+                    hasInternet = (urlc.getResponseCode() == 204 && urlc.getContentLength() <= 0);
+                    Log.d("HASINTERNET", Integer.toString(urlc.getContentLength()));
+                } catch (IOException e) {
+                    Log.e("INTERNET ACCESS", "Error checking internet connection", e);
+                }
+            }
+        });
+        thread.start();
+        while(thread.isAlive());
+        return hasInternet;
     }
 }
