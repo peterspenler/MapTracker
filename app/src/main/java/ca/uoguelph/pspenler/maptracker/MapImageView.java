@@ -39,6 +39,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private float imageScale = 1;
     private ScaleGestureDetector scaleGestureDetector;
     private AccelerometerHandler accelHandler;
+    private CompassHandler compassHandler;
 
     private final static int NONE = 0;
     private final static int PAN = 1;
@@ -126,6 +127,9 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
                         if(accelHandler == null) {
                             accelHandler = new AccelerometerHandler(getContext());
+                        }
+                        if(compassHandler == null){
+                            compassHandler = new CompassHandler(getContext());
                         }
                     }
 
@@ -221,10 +225,14 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         }
     }
 
-    public void closeAccelMonitor(){
+    public void closeSensorMonitors(){
         if(accelHandler != null) {
             accelHandler.close();
         }
+        if(compassHandler != null) {
+            compassHandler.close();
+        }
         accelHandler = null;
+        compassHandler = null;
     }
 }

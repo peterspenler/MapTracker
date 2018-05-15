@@ -39,4 +39,9 @@ public final class DatabasePool {
         context.deleteDatabase(experimentDb.getDatabaseName());
         startDatabase(context);
     }
+
+    public static void deleteDb(Context context){
+        context.deleteDatabase(experimentDb.getDatabaseName());
+        startDatabase(context);
+    }
 }

@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity
 
         configuration = new Configuration();
         DatabasePool.startDatabase(this);
+        DatabasePool.deleteDb(this);
 
         experimentButton = findViewById(R.id.experimentButton);
         finishExperimentButton = findViewById(R.id.finishExperimentButton);

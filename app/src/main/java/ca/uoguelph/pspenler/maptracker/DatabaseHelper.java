@@ -26,6 +26,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "experiment_data.db";
     private static final String LANDMARK_TABLE_NAME = "position_log";
     private static final String ACCELEROMETER_TABLE_NAME = "acceleration_log";
+    private static final String COMPASS_TABLE_NAME = "compass_log";
 
     private static final String DATETIME = "datetime";
     private static final String REALX = "realX";
@@ -34,6 +35,9 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
     private static final String REALXA = "realXAcc";
     private static final String REALYA = "realYAcc";
     private static final String REALZA = "realZAcc";
+
+    private static final String AZIMUTH = "azimuth";
+    private static final String MAGFIELD = "magneticField";
 
 
     DatabaseHelper(Context context) {
@@ -44,6 +48,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " INTEGER, " + REALY + " INTEGER)");
         db.execSQL("create table " + ACCELEROMETER_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALXA + " FLOAT, " + REALYA + " FLOAT, " + REALZA + " FLOAT)");
+        db.execSQL("create table " + COMPASS_TABLE_NAME + "(" + DATETIME + " TEXT, " + AZIMUTH + " FLOAT, " + MAGFIELD + " FLOAT)");
     }
 
     @Override
@@ -79,6 +84,19 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         contentValues.put(REALYA, realY);
         contentValues.put(REALZA, realZ);
         long result = db.insert(ACCELEROMETER_TABLE_NAME, null, contentValues);
+        if(result == -1){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean insertCompassData(float azimuth, float magneticField){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DATETIME, getDatetime());
+        contentValues.put(AZIMUTH, azimuth);
+        contentValues.put(MAGFIELD, magneticField);
+        long result = db.insert(COMPASS_TABLE_NAME, null, contentValues);
         if(result == -1){
             return false;
         }
@@ -169,4 +187,29 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         }
         return ja;
     }
+
+    public JSONArray JSONCompassArray(){
+        JSONArray ja = new JSONArray();
+        try {
+            SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + COMPASS_TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                JSONObject jo = new JSONObject();
+                jo.put("Datetime", cursor.getString(0));
+
+                JSONArray da = new JSONArray();
+                da.put(cursor.getFloat(1));
+                da.put(cursor.getFloat(2));
+
+                jo.put("Data", da);
+
+                ja.put(jo);
+            }
+            cursor.close();
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        return ja;
+    }
+
 }

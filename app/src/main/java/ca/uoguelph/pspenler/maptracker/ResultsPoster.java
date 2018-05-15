@@ -39,6 +39,7 @@ public final class ResultsPoster {
                     jsonParam.put("Beacon Height", config.getBeaconHeight());
                     jsonParam.put("PositionLog", DatabasePool.getDb().JSONPositionArray());
                     jsonParam.put("AccelerometerData", DatabasePool.getDb().JSONAccelerometerArray());
+                    jsonParam.put("CompassData", DatabasePool.getDb().JSONCompassArray());
 
                     DataOutputStream os = new DataOutputStream(conn.getOutputStream());
                     os.writeBytes(jsonParam.toString());

@@ -72,11 +72,9 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
-
-
     @Override
     public void onBackPressed() {
-        mImageView.closeAccelMonitor();
+        mImageView.closeSensorMonitors();
         setResult(RESULT_OK);
         finish();
     }
