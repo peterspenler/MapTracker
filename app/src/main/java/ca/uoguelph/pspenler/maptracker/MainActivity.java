@@ -1,12 +1,18 @@
 package ca.uoguelph.pspenler.maptracker;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -21,12 +27,21 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 
 
@@ -35,7 +50,6 @@ public class MainActivity extends AppCompatActivity
 
     private static int isConfigured = 0;
     private static Configuration configuration;
-    private static DatabaseHelper db;
 
     private Button experimentButton;
     private Button finishExperimentButton;
@@ -43,6 +57,11 @@ public class MainActivity extends AppCompatActivity
     private int requestCode;
     private int grantResults[];
     private static boolean hasInternet;
+
+    private static String mapPath = "";
+
+    private ProgressBar progressBar;
+    private Dialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +153,7 @@ public class MainActivity extends AppCompatActivity
         if(isConfigured == 1){
             Intent intent = new Intent(this, MapActivity.class);
             intent.putExtra("configObject", configuration);
+            intent.putExtra("mapPath", mapPath);
             startActivityForResult(intent, 2);
         } else{
             Toast.makeText(MainActivity.this, "Must configure before experiment", Toast.LENGTH_SHORT).show();
@@ -148,12 +168,15 @@ public class MainActivity extends AppCompatActivity
                 configuration = data.getParcelableExtra("configObject");
                 experimentButton.setVisibility(View.VISIBLE);
                 finishExperimentButton.setVisibility(View.VISIBLE);
+                mapPath = "";
             }
         }
         if(requestCode == 2){
             if(resultCode == RESULT_CANCELED){
-                experimentButton.setVisibility(View.GONE);
+                //experimentButton.setVisibility(View.GONE);
                 finishExperimentButton.setVisibility(View.GONE);
+            } else if(resultCode == RESULT_OK){
+                mapPath = data.getStringExtra("mapPath");
             }
         }
     }
@@ -177,8 +200,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override // android recommended class to handle permissions
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
                 // If request is cancelled, the result arrays are empty.
@@ -187,7 +209,6 @@ public class MainActivity extends AppCompatActivity
 
                     Log.d("permission", "granted");
                 } else {
-
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission
                     Toast.makeText(this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
@@ -211,7 +232,9 @@ public class MainActivity extends AppCompatActivity
             if(resultCode == 201) {
                 DatabasePool.finishDb(configuration, getBaseContext(), 1);
                 uploadDialog.setMessage("Success!");
-                //Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_SHORT).show();
+                if((mapPath != null) && !mapPath.equals("")) {
+                    new File(Uri.parse(mapPath).getPath()).delete();
+                }
                 experimentButton.setVisibility(View.GONE);
                 finishExperimentButton.setVisibility(View.GONE);
             } else if(resultCode == 409) {
@@ -258,5 +281,96 @@ public class MainActivity extends AppCompatActivity
         thread.start();
         while(thread.isAlive());
         return hasInternet;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if((mapPath != null) && !mapPath.equals("")){
+            new File(Uri.parse(mapPath).getPath()).delete();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        if((mapPath != null) && !mapPath.equals("")){
+            new File(Uri.parse(mapPath).getPath()).delete();
+        }
+        super.onStop();
+    }
+
+    //EXPERIMENTAL CODE BELOW HERE
+    public void sendData(View view){
+        progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
+        progressDialog.setTitle("Uploading data");
+
+        /*
+        RelativeLayout layout = new RelativeLayout(dialog.getContext());
+        progressBar = new ProgressBar(dialog.getContext());
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
+        params.addRule(RelativeLayout.CENTER_IN_PARENT);
+        layout.addView(progressBar,params);
+        progressBar.setVisibility(View.VISIBLE);
+    */
+        progressDialog.setContentView(R.layout.dialog_upload);
+        progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
+        progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
+        progressDialog.show();
+        new UploadData().execute();
+    }
+
+    class UploadData extends AsyncTask<String, String, String> {
+
+        /**
+         * Before starting background thread Show Progress Bar Dialog
+         * */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            //showDialog(0);
+        }
+
+        /**
+         * Downloading file in background thread
+         * */
+        @Override
+        protected String doInBackground(String... f_url) {
+            try {
+
+                int lengthOfFile = 100;
+
+                for(int total = 0; total < 101; total++) {
+                    // publishing the progress....
+                    // After this onProgressUpdate will be called
+                    publishProgress("" + (int) ((total * 100) / lengthOfFile));
+                    Thread.sleep(100);
+                }
+
+            } catch (Exception e) {
+                Log.e("Error: ", e.getMessage());
+            }
+
+            return null;
+        }
+
+        /**
+         * Updating progress bar
+         * */
+        protected void onProgressUpdate(String... progress) {
+            // setting progress percentage
+            progressBar.setProgress(Integer.parseInt(progress[0]));
+            //Toast.makeText(getApplicationContext(), progress[0],Toast.LENGTH_SHORT);
+            Log.d("PROGRESS", progress[0]);
+        }
+
+        /**
+         * After completing background task Dismiss the progress dialog
+         * **/
+        @Override
+        protected void onPostExecute(String file_url) {
+            // dismiss the dialog after the file was downloaded
+            progressDialog.hide();
+        }
+
     }
 }

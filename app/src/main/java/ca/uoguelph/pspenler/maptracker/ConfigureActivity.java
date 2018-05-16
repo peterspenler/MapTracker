@@ -43,7 +43,8 @@ public class ConfigureActivity extends AppCompatActivity {
 
     public void submitConfiguration(View view) {
         try {
-            configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
+            //configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
+            configuration.initConfig("ExpName", "http://10.16.9.222:5000/config.cfg", "http://10.16.9.222:5000/results", "thebeac1", "2.34");
             Intent intent = new Intent();
             intent.putExtra("configObject", configuration);
             setResult(RESULT_OK, intent);

@@ -61,8 +61,6 @@ public class Configuration implements Parcelable {
         }
 
         //Checks that config file exists
-
-
         loadConfig(confFile);
         if(configLoaded == 2){
             throw new Exception(errorMsg);
@@ -94,6 +92,39 @@ public class Configuration implements Parcelable {
         }
 
         validConfig = 1;
+    }
+
+    private void loadConfig(String config){
+        configLoaded = 0;
+
+        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
+
+            public void handleMessage(Message msg) {
+                Log.d("Message", "received");
+                Bundle b;
+                if(msg.what == 1){
+                    Log.e("Message", "TYPE 1");
+                    b = msg.getData();
+
+                    configName = b.getString("configName");
+                    imagePath = b.getString("imagePath");
+                    landmarks = b.getParcelableArrayList("landmarks");
+                    configLoaded = 1;
+                }
+                if(msg.what == 2){
+                    Log.e("Message", "TYPE 2");
+                    b = msg.getData();
+
+                    errorMsg = b.getString("errorMsg");
+                    configLoaded = 2;
+                }
+                super.handleMessage(msg);
+            }
+        };
+
+        Thread thread = new WebThread(mHandler, config);
+        thread.start();
+        while(thread.isAlive());
     }
 
     public int isValid(){
@@ -137,40 +168,6 @@ public class Configuration implements Parcelable {
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
     public void invalidate(){ this.validConfig = 0; }
-
-    private void loadConfig(String config){
-        configLoaded = 0;
-
-        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
-
-            public void handleMessage(Message msg) {
-                Log.d("Message", "received");
-                Bundle b;
-                if(msg.what == 1){
-                    Log.e("Message", "TYPE 1");
-                    b = msg.getData();
-
-                    configName = b.getString("configName");
-                    imagePath = b.getString("imagePath");
-                    landmarks = b.getParcelableArrayList("landmarks");
-                    configLoaded = 1;
-                }
-                if(msg.what == 2){
-                    Log.e("Message", "TYPE 2");
-                    b = msg.getData();
-
-                    errorMsg = b.getString("errorMsg");
-                    configLoaded = 2;
-                }
-                super.handleMessage(msg);
-            }
-        };
-
-        Thread thread = new WebThread(mHandler, config);
-        thread.start();
-        while(thread.isAlive());
-    }
-
 
     @Override
     public int describeContents() {
