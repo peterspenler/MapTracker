@@ -1,18 +1,24 @@
 package ca.uoguelph.pspenler.maptracker;
 
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.IntegerRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -27,6 +33,9 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
     private String errorMsg;
 
     private String mapPath;
+
+    private static Dialog progressDialog;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,10 +52,18 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
         String type = config.getImagePath().substring(0, Math.min(config.getImagePath().length(), 4));
 
         if(type.equals("http") && (mapPath == null || mapPath.equals(""))){
-                DownloadMapImage downloader = new DownloadMapImage();
-                downloader.delegate = this;
-                Log.d("FILEPATH", "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/map2.png");
-                downloader.execute(config.getImagePath(), "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/map2.png");
+            progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
+            progressDialog.setTitle("Uploading data");
+            progressDialog.setContentView(R.layout.dialog_upload);
+            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
+            progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
+            TextView title = progressDialog.findViewById(R.id.uploadDataTitle);
+            title.setText("Downloading Map");
+            progressDialog.show();
+
+            DownloadMapImage downloader = new DownloadMapImage();
+            downloader.delegate = this;
+            downloader.execute(config.getImagePath(), "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/map2.png");
         } else{
             if(type.equals("file")) {
                 mapPath = config.getImagePath();
@@ -56,7 +73,6 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
     }
 
     private void initImageView(){
-        Log.d("INITIMAGEVIEW", "CALLED");
         try {
             mImageView.setImageUri(mapPath, config.getLandmarks());
         }catch (NullPointerException e){
@@ -82,22 +98,43 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
     @Override
     public void onBackPressed() {
         mImageView.closeSensorMonitors();
+        progressDialog.dismiss();
         Intent intent = new Intent();
         intent.putExtra("mapPath", mapPath);
         setResult(RESULT_OK, intent);
         finish();
     }
 
-    static class DownloadMapImage extends AsyncTask<String, Void, String>{
+    @Override
+    protected void onDestroy() {
+        mImageView.closeSensorMonitors();
+        progressDialog.dismiss();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        mImageView.closeSensorMonitors();
+        progressDialog.dismiss();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        mImageView.openSensorMonitors();
+        super.onResume();
+    }
+
+    class DownloadMapImage extends AsyncTask<String, Integer, String>{
         String filepath = "";
-        public AsyncResponse delegate = null;
+        AsyncResponse delegate = null;
 
         @Override
         protected String doInBackground(String... strings) {
             int count;
             try {
                 URL url = new URL(strings[0]);
-                URLConnection connection = url.openConnection();
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
 
                 // download the file
@@ -105,16 +142,21 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
                 filepath = strings[1];
 
                 // Output stream
-                //Uri uri = Uri.parse(filepath).getPath();
                 OutputStream output = new FileOutputStream(Uri.parse(filepath).getPath());
                 byte data[] = new byte[1024];
+
+                long total = 0;
+                long length = connection.getContentLength();
                 while ((count = input.read(data)) != -1) {
+                    total += count;
+                    publishProgress((int) ((total * 100) / length));
                     output.write(data, 0, count);
                 }
                 // flushing output
                 output.flush();
                 output.close();
                 input.close();
+                connection.disconnect();
 
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
@@ -124,8 +166,13 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
             return filepath;
         }
 
+        protected void onProgressUpdate(Integer... progress) {
+            progressBar.setProgress(progress[0]);
+        }
+
         @Override
         protected void onPostExecute(String s) {
+            progressDialog.dismiss();
             delegate.processFinish(s);
         }
     }

@@ -3,12 +3,13 @@ package ca.uoguelph.pspenler.maptracker;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
 
-import com.opencsv.CSVWriter;
+//import com.opencsv.CSVWriter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -107,6 +108,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         Uri uri;
         File file;
         String tableName = LANDMARK_TABLE_NAME;
+        /*
         for(int i = 0; i < 2; i++) {
             if (fileNum == 0) {
                 uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_<" + tableName + ">.csv");
@@ -136,7 +138,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
                 Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
             }
             tableName = ACCELEROMETER_TABLE_NAME;
-        }
+        }*/
     }
 
     public JSONArray JSONPositionArray(){

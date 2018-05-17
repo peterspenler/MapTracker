@@ -32,7 +32,12 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -43,10 +48,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        /*implements NavigationView.OnNavigationItemSelectedListener*/ {
 
     private static int isConfigured = 0;
     private static Configuration configuration;
@@ -71,14 +82,14 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         //Drawer
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        //DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        //ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        //        this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        //drawer.addDrawerListener(toggle);
+        //toggle.syncState();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        //NavigationView navigationView = findViewById(R.id.nav_view);
+        //navigationView.setNavigationItemSelectedListener(this);
 
         configuration = new Configuration();
         DatabasePool.startDatabase(this);
@@ -93,7 +104,7 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
         onRequestPermissionsResult(requestCode,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
     }
-
+    /*
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -141,7 +152,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
+    }*/
 
     public void launchConfiguration(View view) {
         Intent intent = new Intent(this, ConfigureActivity.class);
@@ -173,7 +184,6 @@ public class MainActivity extends AppCompatActivity
         }
         if(requestCode == 2){
             if(resultCode == RESULT_CANCELED){
-                //experimentButton.setVisibility(View.GONE);
                 finishExperimentButton.setVisibility(View.GONE);
             } else if(resultCode == RESULT_OK){
                 mapPath = data.getStringExtra("mapPath");
@@ -190,7 +200,7 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        sendToServer();
+                        sendData();
                     }})
                 .setNegativeButton(android.R.string.no, null);
 
@@ -219,46 +229,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void sendToServer(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle).setMessage("Saving to server...").setIcon(android.R.drawable.ic_menu_send).setPositiveButton("Ok", null).setTitle("");
-        AlertDialog uploadDialog = builder.create();
-        uploadDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
-        uploadDialog.show();
-
-        try {
-            int resultCode = ResultsPoster.post(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"), configuration); //Saves to server
-            uploadDialog.setTitle("Upload Result");
-            uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
-            if(resultCode == 201) {
-                DatabasePool.finishDb(configuration, getBaseContext(), 1);
-                uploadDialog.setMessage("Success!");
-                if((mapPath != null) && !mapPath.equals("")) {
-                    new File(Uri.parse(mapPath).getPath()).delete();
-                }
-                experimentButton.setVisibility(View.GONE);
-                finishExperimentButton.setVisibility(View.GONE);
-            } else if(resultCode == 409) {
-                uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
-            } else if((resultCode == 404) || (resultCode == 0)){
-                if(!hasInternetAccess("http://clients3.google.com/generate_204")){
-                    uploadDialog.setMessage("No internet connection. Please check network settings");
-                } else if(configuration.getName().contains("/")){
-                    uploadDialog.setMessage("The experiment name is invalid. Please remove any '/' characters from the experiment name");
-                } else{
-                    uploadDialog.setMessage("Invalid results server");
-                }
-                uploadDialog.setMessage("The experiment name is invalid. Please change the name in the configuration");
-            } else if(resultCode == 412){
-                uploadDialog.setMessage("The submission has empty or invalid values and cannot be accepted. Please check the configuration");
-            } else{
-                uploadDialog.setMessage("RESULT CODE: " + Integer.toString(resultCode));
-            }
-        }catch(UnsupportedEncodingException e){
-            Toast.makeText(MainActivity.this, "Encoding error, check experiment name", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
-    }
-
     public static boolean hasInternetAccess(final String url) {
         hasInternet = false;
 
@@ -273,13 +243,18 @@ public class MainActivity extends AppCompatActivity
                     urlc.connect();
                     hasInternet = (urlc.getResponseCode() == 204 && urlc.getContentLength() <= 0);
                     Log.d("HASINTERNET", Integer.toString(urlc.getContentLength()));
+                    urlc.disconnect();
                 } catch (IOException e) {
                     Log.e("INTERNET ACCESS", "Error checking internet connection", e);
                 }
             }
         });
         thread.start();
-        while(thread.isAlive());
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return hasInternet;
     }
 
@@ -299,77 +274,126 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
     }
 
-    //EXPERIMENTAL CODE BELOW HERE
-    public void sendData(View view){
+    public void sendData(){
         progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
         progressDialog.setTitle("Uploading data");
-
-        /*
-        RelativeLayout layout = new RelativeLayout(dialog.getContext());
-        progressBar = new ProgressBar(dialog.getContext());
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
-        params.addRule(RelativeLayout.CENTER_IN_PARENT);
-        layout.addView(progressBar,params);
-        progressBar.setVisibility(View.VISIBLE);
-    */
         progressDialog.setContentView(R.layout.dialog_upload);
         progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
         progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
         progressDialog.show();
-        new UploadData().execute();
+        try {
+            new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
-    class UploadData extends AsyncTask<String, String, String> {
+    class UploadData extends AsyncTask<String, String, Integer> {
 
-        /**
-         * Before starting background thread Show Progress Bar Dialog
-         * */
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //showDialog(0);
         }
 
-        /**
-         * Downloading file in background thread
-         * */
         @Override
-        protected String doInBackground(String... f_url) {
+        protected Integer doInBackground(String... urls) {
+            int resultCode = 0;
             try {
+                URL url = new URL(urls[0]);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+                conn.setRequestProperty("Accept","application/json");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
 
-                int lengthOfFile = 100;
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("Experiment Name", configuration.getName());
+                jsonParam.put("SubmissionDatetime", getDatetime());
+                jsonParam.put("Configuration File", configuration.getConfigFile());
+                jsonParam.put("Beacon Label", configuration.getBeaconLabel());
+                jsonParam.put("Beacon Height", configuration.getBeaconHeight());
+                jsonParam.put("PositionLog", DatabasePool.getDb().JSONPositionArray());
+                jsonParam.put("AccelerometerData", DatabasePool.getDb().JSONAccelerometerArray());
+                jsonParam.put("CompassData", DatabasePool.getDb().JSONCompassArray());
 
-                for(int total = 0; total < 101; total++) {
-                    // publishing the progress....
-                    // After this onProgressUpdate will be called
-                    publishProgress("" + (int) ((total * 100) / lengthOfFile));
-                    Thread.sleep(100);
+                DataOutputStream os = new DataOutputStream(conn.getOutputStream());
+                byte[] stringBytes = jsonParam.toString().getBytes(StandardCharsets.UTF_8);
+                ByteArrayInputStream is = new ByteArrayInputStream(stringBytes);
+
+                int maxBufferSize = 4096;
+                byte[] buffer = new byte[maxBufferSize];
+                long length = stringBytes.length;
+                int bytesRead;
+                long total = 0;
+
+                while ((bytesRead = is.read(buffer, 0, maxBufferSize)) > 0) {
+                    total += bytesRead;
+                    publishProgress("" + (int) ((total * 100) / length));
+                    os.write(buffer, 0, bytesRead);
                 }
 
+                os.flush();
+                os.close();
+
+                resultCode = conn.getResponseCode();
+                conn.disconnect();
             } catch (Exception e) {
-                Log.e("Error: ", e.getMessage());
+                e.printStackTrace();
             }
 
-            return null;
+            return resultCode;
         }
 
-        /**
-         * Updating progress bar
-         * */
+
         protected void onProgressUpdate(String... progress) {
-            // setting progress percentage
             progressBar.setProgress(Integer.parseInt(progress[0]));
-            //Toast.makeText(getApplicationContext(), progress[0],Toast.LENGTH_SHORT);
-            Log.d("PROGRESS", progress[0]);
         }
 
-        /**
-         * After completing background task Dismiss the progress dialog
-         * **/
         @Override
-        protected void onPostExecute(String file_url) {
+        protected void onPostExecute(Integer resultCode) {
             // dismiss the dialog after the file was downloaded
-            progressDialog.hide();
+            progressDialog.dismiss();
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle)
+                    .setTitle("Upload Result")
+                    .setMessage("")
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setPositiveButton("Ok", null);
+            AlertDialog uploadDialog = builder.create();
+            uploadDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
+            uploadDialog.show();
+
+            uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
+            if(resultCode == 201) {
+                DatabasePool.finishDb(configuration, getBaseContext(), 1);
+                uploadDialog.setMessage("Success!");
+                if((mapPath != null) && !mapPath.equals("")) {
+                    new File(Uri.parse(mapPath).getPath()).delete();
+                }
+                experimentButton.setVisibility(View.GONE);
+                finishExperimentButton.setVisibility(View.GONE);
+            } else if(resultCode == 409) {
+                uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
+            } else if((resultCode == 404) || (resultCode == 0)){
+                if(!hasInternetAccess("http://clients3.google.com/generate_204")){
+                    uploadDialog.setMessage("No internet connection. Please check network settings");
+                } else if(configuration.getName().contains("/")){
+                    uploadDialog.setMessage("The experiment name is invalid. Please remove any '/' characters from the experiment name");
+                } else{
+                    uploadDialog.setMessage("Invalid results server");
+                }
+            } else if(resultCode == 412){
+                uploadDialog.setMessage("The submission has empty or invalid values and cannot be accepted. Please check the configuration");
+            } else{
+                uploadDialog.setMessage("RESULT CODE: " + Integer.toString(resultCode));
+            }
+        }
+
+        private String getDatetime(){
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
+            dateFormat.setTimeZone(TimeZone.getDefault());
+            return dateFormat.format(new Date());
         }
 
     }

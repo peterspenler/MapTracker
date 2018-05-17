@@ -100,10 +100,8 @@ public class Configuration implements Parcelable {
         @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
 
             public void handleMessage(Message msg) {
-                Log.d("Message", "received");
                 Bundle b;
                 if(msg.what == 1){
-                    Log.e("Message", "TYPE 1");
                     b = msg.getData();
 
                     configName = b.getString("configName");
@@ -112,7 +110,6 @@ public class Configuration implements Parcelable {
                     configLoaded = 1;
                 }
                 if(msg.what == 2){
-                    Log.e("Message", "TYPE 2");
                     b = msg.getData();
 
                     errorMsg = b.getString("errorMsg");
@@ -124,7 +121,11 @@ public class Configuration implements Parcelable {
 
         Thread thread = new WebThread(mHandler, config);
         thread.start();
-        while(thread.isAlive());
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public int isValid(){

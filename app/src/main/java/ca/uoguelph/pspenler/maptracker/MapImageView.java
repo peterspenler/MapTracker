@@ -234,7 +234,14 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
         if(compassHandler != null) {
             compassHandler.close();
         }
-        accelHandler = null;
-        compassHandler = null;
+    }
+
+    public void openSensorMonitors(){
+        if(accelHandler != null) {
+            accelHandler.open();
+        }
+        if(compassHandler != null) {
+            compassHandler.open();
+        }
     }
 }
