@@ -3,20 +3,13 @@ package ca.uoguelph.pspenler.maptracker;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
-import android.util.Log;
-
-//import com.opencsv.CSVWriter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -102,43 +95,6 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
             return false;
         }
         return true;
-    }
-
-    public void finishDatabse(Configuration config, int fileNum){
-        Uri uri;
-        File file;
-        String tableName = LANDMARK_TABLE_NAME;
-        /*
-        for(int i = 0; i < 2; i++) {
-            if (fileNum == 0) {
-                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_<" + tableName + ">.csv");
-                file = new File(uri.getPath());
-            } else {
-                uri = Uri.parse("file:///storage/emulated/0/Documents/" + config.getName() + "_" + config.getBeaconLabel() + "_<" + tableName + ">" + Integer.toString(fileNum) + ".csv");
-                file = new File(uri.getPath());
-            }
-            try {
-                CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-                SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
-                Cursor curCSV = db.rawQuery("SELECT * FROM " + tableName, null);
-                csvWrite.writeNext(curCSV.getColumnNames());
-                while (curCSV.moveToNext()) {
-                    if(i == 0) {
-                        String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
-                        csvWrite.writeNext(arrStr, false);
-                    }
-                    if(i == 1){
-                        String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2), curCSV.getString(3)};
-                        csvWrite.writeNext(arrStr, false);
-                    }
-                }
-                csvWrite.close();
-                curCSV.close();
-            } catch (Exception sqlEx) {
-                Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
-            }
-            tableName = ACCELEROMETER_TABLE_NAME;
-        }*/
     }
 
     public JSONArray JSONPositionArray(){

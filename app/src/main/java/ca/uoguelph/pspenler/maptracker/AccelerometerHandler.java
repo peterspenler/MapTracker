@@ -23,7 +23,6 @@ public class AccelerometerHandler implements SensorEventListener{
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.e("SENSOR", "ACCELEROMETER CHANGED");
         DatabasePool.getDb().insertAccelData(event.values[0], event.values[1], event.values[2]);
     }
 
@@ -38,7 +37,6 @@ public class AccelerometerHandler implements SensorEventListener{
 
     public void open(){
         if(accelerometer != null) {
-            Log.d("LISTENER", "ACCELEROMETER REGISTERED");
             manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }

@@ -2,51 +2,33 @@ package ca.uoguelph.pspenler.maptracker;
 
 import android.Manifest;
 import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -56,8 +38,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 
-public class MainActivity extends AppCompatActivity
-        /*implements NavigationView.OnNavigationItemSelectedListener*/ {
+public class MainActivity extends AppCompatActivity{
 
     private static int isConfigured = 0;
     private static Configuration configuration;
@@ -78,18 +59,6 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        //Drawer
-        //DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        //ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-        //        this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        //drawer.addDrawerListener(toggle);
-        //toggle.syncState();
-
-        //NavigationView navigationView = findViewById(R.id.nav_view);
-        //navigationView.setNavigationItemSelectedListener(this);
 
         configuration = new Configuration();
         DatabasePool.startDatabase(this);
@@ -104,55 +73,6 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
         onRequestPermissionsResult(requestCode,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
     }
-    /*
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_configure) {
-            // Handle the camera action
-        } else if (id == R.id.nav_experiment) {
-            Toast.makeText(getApplicationContext(), "Started the gallery", Toast.LENGTH_SHORT).show();
-        }
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }*/
 
     public void launchConfiguration(View view) {
         Intent intent = new Intent(this, ConfigureActivity.class);
@@ -219,10 +139,8 @@ public class MainActivity extends AppCompatActivity
 
                     Log.d("permission", "granted");
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission
+                    // permission denied
                     Toast.makeText(this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
-                    //app cannot function without this permission for now so close it...
                     onDestroy();
                 }
             }
@@ -280,6 +198,7 @@ public class MainActivity extends AppCompatActivity
         progressDialog.setContentView(R.layout.dialog_upload);
         progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
         progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
+        progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent),android.graphics.PorterDuff.Mode.SRC_IN);
         progressDialog.show();
         try {
             new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"));
@@ -352,7 +271,6 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(Integer resultCode) {
-            // dismiss the dialog after the file was downloaded
             progressDialog.dismiss();
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle)
@@ -366,7 +284,7 @@ public class MainActivity extends AppCompatActivity
 
             uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
             if(resultCode == 201) {
-                DatabasePool.finishDb(configuration, getBaseContext(), 1);
+                DatabasePool.finishDb(getBaseContext());
                 uploadDialog.setMessage("Success!");
                 if((mapPath != null) && !mapPath.equals("")) {
                     new File(Uri.parse(mapPath).getPath()).delete();

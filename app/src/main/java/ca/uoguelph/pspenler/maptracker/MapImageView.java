@@ -26,7 +26,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
     private int mImageHeight;
 
     private final static float minZoom = 1.f;
-    private final static float maxZoom = 3.f;
+    private final static float maxZoom = 4.f;
     private float scaleFactor = 1;
     private float oScaleFactor = 1;
     private float imageScale = 1;
@@ -122,7 +122,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView{
                     }
 
                     if(closeID != -1){
-                        Toast.makeText(getContext(), "Added point " + Integer.toString(closeID), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Added point " + points.get(closeID).getLabel(), Toast.LENGTH_SHORT).show();
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
                         if(accelHandler == null) {
                             accelHandler = new AccelerometerHandler(getContext());

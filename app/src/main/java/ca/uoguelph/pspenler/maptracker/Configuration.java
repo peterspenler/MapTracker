@@ -1,27 +1,11 @@
 package ca.uoguelph.pspenler.maptracker;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class Configuration implements Parcelable {
@@ -67,6 +51,7 @@ public class Configuration implements Parcelable {
         }
         configFile = confFile;
 
+        //Checks that the results server is valid
         if(server.equals("")) {
             throw new Exception("Results server address cannot be empty");
         } else if (!MainActivity.hasInternetAccess(server)){
@@ -98,7 +83,6 @@ public class Configuration implements Parcelable {
         configLoaded = 0;
 
         @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
-
             public void handleMessage(Message msg) {
                 Bundle b;
                 if(msg.what == 1){
@@ -128,10 +112,6 @@ public class Configuration implements Parcelable {
         }
     }
 
-    public int isValid(){
-        return validConfig;
-    }
-
     public String getName(){
         return experimentName;
     }
@@ -159,16 +139,6 @@ public class Configuration implements Parcelable {
     public ArrayList<Landmark> getLandmarks() {
         return landmarks;
     }
-
-    private void setLandmarks(ArrayList<Landmark> landmarks) {
-        this.landmarks = landmarks;
-    }
-
-    public void setConfigName(String configName) { this.configName = configName; }
-
-    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
-
-    public void invalidate(){ this.validConfig = 0; }
 
     @Override
     public int describeContents() {

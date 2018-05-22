@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.IntegerRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ProgressBar;
@@ -20,7 +19,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 
 interface AsyncResponse {
     void processFinish(String output);
@@ -42,6 +40,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         mImageView = findViewById(R.id.mapImageView);
+        getSupportActionBar().setTitle("Experiment");
 
         config = getIntent().getParcelableExtra("configObject");
         mapPath = getIntent().getStringExtra("mapPath");
@@ -57,6 +56,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
             progressDialog.setContentView(R.layout.dialog_upload);
             progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
             progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
+            progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent),android.graphics.PorterDuff.Mode.SRC_IN);
             TextView title = progressDialog.findViewById(R.id.uploadDataTitle);
             title.setText("Downloading Map");
             progressDialog.show();
@@ -72,6 +72,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
         }
     }
 
+    //Initializes th
     private void initImageView(){
         try {
             mImageView.setImageUri(mapPath, config.getLandmarks());

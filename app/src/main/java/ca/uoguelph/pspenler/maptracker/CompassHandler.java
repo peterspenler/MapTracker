@@ -41,7 +41,6 @@ public class CompassHandler implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.e("SENSOR", "COMPASS CHANGED");
         float[] rotationMatrix = new float[9];
         float[] orientation = new float[3];
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
@@ -77,11 +76,9 @@ public class CompassHandler implements SensorEventListener {
 
     public void open(){
         if(magnetometer != null) {
-            Log.d("LISTENER", "MAGNETOMETER REGISTERED");
             manager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
         if(rotationV != null){
-            Log.d("LISTENER", "ROTATIONV REGISTERED");
             manager.registerListener(this, rotationV, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
