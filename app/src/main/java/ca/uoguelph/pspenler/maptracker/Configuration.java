@@ -35,36 +35,35 @@ public class Configuration implements Parcelable {
 
     public void initConfig(String name, String confFile, String server, String label, String height) throws Exception {
         //Checks that experiment name is not empty
+        String error = "";
         if (name.equals("")) {
-            throw new Exception("Experiment name cannot be empty");
+            error = "Experiment name cannot be empty";
         } else {
             if (name.contains("/")) {
-                throw new Exception("Experiment name cannot contain '/' characters");
-            } else {
-                experimentName = name;
+                error = "Experiment name cannot contain '/' characters";
             }
+            experimentName = name;
         }
 
         //Checks that config file exists
         loadConfig(confFile);
         if (configLoaded == 2) {
-            throw new Exception(errorMsg);
+            error = errorMsg;
         }
         configFile = confFile;
 
         //Checks that the results server is valid
         if (server.equals("")) {
-            throw new Exception("Results server address cannot be empty");
+            error = "Results server address cannot be empty";
         } else if (!MainActivity.hasInternetAccess(server)) {
-            throw new Exception("Inputted results server not available");
-        } else {
-            resultsServer = server;
+            error = "Inputted results server not available";
         }
 
+        resultsServer = server;
 
         //Checks that beacon label is not empty
         if (label.equals("")) {
-            throw new Exception("Beacon label cannot be empty");
+            error = "Beacon label cannot be empty";
         } else {
             beaconLabel = label;
         }
@@ -73,9 +72,12 @@ public class Configuration implements Parcelable {
         try {
             beaconHeight = Float.parseFloat(height);
         } catch (Exception e) {
-            throw new Exception("Beacon height is not an valid number");
+            error = "Beacon height is not an valid number";
         }
 
+        if (error != "") {
+            throw new Exception(error);
+        }
         validConfig = 1;
     }
 

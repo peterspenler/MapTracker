@@ -1,12 +1,16 @@
 package ca.uoguelph.pspenler.maptracker;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 public class ConfigureActivity extends AppCompatActivity {
 
@@ -26,6 +30,12 @@ public class ConfigureActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         configuration = getIntent().getParcelableExtra("configObject");
 
+        SharedPreferences mPref = getPreferences(MODE_PRIVATE);
+        String json = mPref.getString("config", "");
+        if (!json.equals("")) {
+            configuration = new Gson().fromJson(json, Configuration.class);
+        }
+
         nameEdit = findViewById(R.id.experimentName_edit);
         fileEdit = findViewById(R.id.configurationFile_edit);
         serverEdit = findViewById(R.id.resultsServer_edit);
@@ -43,8 +53,7 @@ public class ConfigureActivity extends AppCompatActivity {
 
     public void submitConfiguration(View view) {
         try {
-            configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
-            //configuration.initConfig("ExpName", "http://10.16.9.222:5000/config.cfg", "http://10.16.9.222:5000/results", "thebeac1", "2.34"); //Testing version
+            saveState();
             Intent intent = new Intent();
             intent.putExtra("configObject", configuration);
             setResult(RESULT_OK, intent);
@@ -53,4 +62,28 @@ public class ConfigureActivity extends AppCompatActivity {
             Toast.makeText(ConfigureActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void saveState() throws Exception {
+        try {
+            configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
+        } catch (Exception e) {
+            Log.d("Config", "Configuration failed to save with error but we will save anyway", e);
+        }
+        SharedPreferences mPref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPref.edit();
+        prefsEditor.putString("config", new Gson().toJson(configuration));
+        prefsEditor.commit();
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            saveState();
+        } catch (Exception e) {
+            Toast.makeText(ConfigureActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
 }
