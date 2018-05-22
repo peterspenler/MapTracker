@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -13,9 +12,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -38,7 +37,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
     private static int isConfigured = 0;
     private static Configuration configuration;
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity{
         finishExperimentButton.setVisibility(View.GONE);
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
-        onRequestPermissionsResult(requestCode,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
+        onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
     }
 
     public void launchConfiguration(View view) {
@@ -81,20 +80,20 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void launchExperiment(View view) {
-        if(isConfigured == 1){
+        if (isConfigured == 1) {
             Intent intent = new Intent(this, MapActivity.class);
             intent.putExtra("configObject", configuration);
             intent.putExtra("mapPath", mapPath);
             startActivityForResult(intent, 2);
-        } else{
+        } else {
             Toast.makeText(MainActivity.this, "Must configure before experiment", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1){
-            if(resultCode == RESULT_OK){
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
                 isConfigured = 1;
                 configuration = data.getParcelableExtra("configObject");
                 experimentButton.setVisibility(View.VISIBLE);
@@ -102,10 +101,10 @@ public class MainActivity extends AppCompatActivity{
                 mapPath = "";
             }
         }
-        if(requestCode == 2){
-            if(resultCode == RESULT_CANCELED){
+        if (requestCode == 2) {
+            if (resultCode == RESULT_CANCELED) {
                 finishExperimentButton.setVisibility(View.GONE);
-            } else if(resultCode == RESULT_OK){
+            } else if (resultCode == RESULT_OK) {
                 mapPath = data.getStringExtra("mapPath");
             }
         }
@@ -121,7 +120,8 @@ public class MainActivity extends AppCompatActivity{
 
                     public void onClick(DialogInterface dialog, int whichButton) {
                         sendData();
-                    }})
+                    }
+                })
                 .setNegativeButton(android.R.string.no, null);
 
         AlertDialog dialog = builder.create();
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     protected void onDestroy() {
-        if((mapPath != null) && !mapPath.equals("")){
+        if ((mapPath != null) && !mapPath.equals("")) {
             new File(Uri.parse(mapPath).getPath()).delete();
         }
         super.onDestroy();
@@ -186,19 +186,19 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     protected void onStop() {
-        if((mapPath != null) && !mapPath.equals("")){
+        if ((mapPath != null) && !mapPath.equals("")) {
             new File(Uri.parse(mapPath).getPath()).delete();
         }
         super.onStop();
     }
 
-    public void sendData(){
+    public void sendData() {
         progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
         progressDialog.setTitle("Uploading data");
         progressDialog.setContentView(R.layout.dialog_upload);
         progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
         progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
-        progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent),android.graphics.PorterDuff.Mode.SRC_IN);
+        progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN);
         progressDialog.show();
         try {
             new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"));
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity{
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-                conn.setRequestProperty("Accept","application/json");
+                conn.setRequestProperty("Accept", "application/json");
                 conn.setDoOutput(true);
                 conn.setDoInput(true);
 
@@ -283,32 +283,32 @@ public class MainActivity extends AppCompatActivity{
             uploadDialog.show();
 
             uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
-            if(resultCode == 201) {
+            if (resultCode == 201) {
                 DatabasePool.finishDb(getBaseContext());
                 uploadDialog.setMessage("Success!");
-                if((mapPath != null) && !mapPath.equals("")) {
+                if ((mapPath != null) && !mapPath.equals("")) {
                     new File(Uri.parse(mapPath).getPath()).delete();
                 }
                 experimentButton.setVisibility(View.GONE);
                 finishExperimentButton.setVisibility(View.GONE);
-            } else if(resultCode == 409) {
+            } else if (resultCode == 409) {
                 uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
-            } else if((resultCode == 404) || (resultCode == 0)){
-                if(!hasInternetAccess("http://clients3.google.com/generate_204")){
+            } else if ((resultCode == 404) || (resultCode == 0)) {
+                if (!hasInternetAccess("http://clients3.google.com/generate_204")) {
                     uploadDialog.setMessage("No internet connection. Please check network settings");
-                } else if(configuration.getName().contains("/")){
+                } else if (configuration.getName().contains("/")) {
                     uploadDialog.setMessage("The experiment name is invalid. Please remove any '/' characters from the experiment name");
-                } else{
+                } else {
                     uploadDialog.setMessage("Invalid results server");
                 }
-            } else if(resultCode == 412){
+            } else if (resultCode == 412) {
                 uploadDialog.setMessage("The submission has empty or invalid values and cannot be accepted. Please check the configuration");
-            } else{
+            } else {
                 uploadDialog.setMessage("RESULT CODE: " + Integer.toString(resultCode));
             }
         }
 
-        private String getDatetime(){
+        private String getDatetime() {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
             dateFormat.setTimeZone(TimeZone.getDefault());
             return dateFormat.format(new Date());

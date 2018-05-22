@@ -24,7 +24,7 @@ interface AsyncResponse {
     void processFinish(String output);
 }
 
-public class MapActivity extends AppCompatActivity implements AsyncResponse{
+public class MapActivity extends AppCompatActivity implements AsyncResponse {
 
     private Configuration config;
     private MapImageView mImageView;
@@ -47,16 +47,16 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
         initMapView();
     }
 
-    private void initMapView(){
+    private void initMapView() {
         String type = config.getImagePath().substring(0, Math.min(config.getImagePath().length(), 4));
 
-        if(type.equals("http") && (mapPath == null || mapPath.equals(""))){
+        if (type.equals("http") && (mapPath == null || mapPath.equals(""))) {
             progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
             progressDialog.setTitle("Uploading data");
             progressDialog.setContentView(R.layout.dialog_upload);
             progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
             progressBar = progressDialog.getWindow().findViewById(R.id.uploadDataProgress);
-            progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent),android.graphics.PorterDuff.Mode.SRC_IN);
+            progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN);
             TextView title = progressDialog.findViewById(R.id.uploadDataTitle);
             title.setText("Downloading Map");
             progressDialog.show();
@@ -64,8 +64,8 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
             DownloadMapImage downloader = new DownloadMapImage();
             downloader.delegate = this;
             downloader.execute(config.getImagePath(), "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/map2.png");
-        } else{
-            if(type.equals("file")) {
+        } else {
+            if (type.equals("file")) {
                 mapPath = config.getImagePath();
             }
             initImageView();
@@ -73,10 +73,10 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
     }
 
     //Initializes th
-    private void initImageView(){
+    private void initImageView() {
         try {
             mImageView.setImageUri(mapPath, config.getLandmarks());
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             errorMsg = "Map image could not be loaded, Please check configuration";
             setResult(RESULT_CANCELED);
             finish();
@@ -86,7 +86,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
     @Override
     public void processFinish(String output) {
         String type = output.substring(0, Math.min(config.getImagePath().length(), 4));
-        if(type.equals("file")){
+        if (type.equals("file")) {
             mapPath = output;
             initImageView();
         } else {
@@ -126,7 +126,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
         super.onResume();
     }
 
-    class DownloadMapImage extends AsyncTask<String, Integer, String>{
+    class DownloadMapImage extends AsyncTask<String, Integer, String> {
         String filepath = "";
         AsyncResponse delegate = null;
 
@@ -139,7 +139,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse{
                 connection.connect();
 
                 // download the file
-                InputStream input = new BufferedInputStream(url.openStream(),8192);
+                InputStream input = new BufferedInputStream(url.openStream(), 8192);
                 filepath = strings[1];
 
                 // Output stream

@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
+
 import java.util.ArrayList;
 
 public class Configuration implements Parcelable {
@@ -21,7 +22,7 @@ public class Configuration implements Parcelable {
     private int configLoaded;
     private String errorMsg = "";
 
-    Configuration(){
+    Configuration() {
         experimentName = "";
         configFile = "";
         resultsServer = "";
@@ -32,12 +33,12 @@ public class Configuration implements Parcelable {
         validConfig = 0;
     }
 
-    public void initConfig(String name, String confFile, String server, String label, String height) throws Exception{
+    public void initConfig(String name, String confFile, String server, String label, String height) throws Exception {
         //Checks that experiment name is not empty
-        if(name.equals("")) {
+        if (name.equals("")) {
             throw new Exception("Experiment name cannot be empty");
-        }else {
-            if(name.contains("/")){
+        } else {
+            if (name.contains("/")) {
                 throw new Exception("Experiment name cannot contain '/' characters");
             } else {
                 experimentName = name;
@@ -46,46 +47,45 @@ public class Configuration implements Parcelable {
 
         //Checks that config file exists
         loadConfig(confFile);
-        if(configLoaded == 2){
+        if (configLoaded == 2) {
             throw new Exception(errorMsg);
         }
         configFile = confFile;
 
         //Checks that the results server is valid
-        if(server.equals("")) {
+        if (server.equals("")) {
             throw new Exception("Results server address cannot be empty");
-        } else if (!MainActivity.hasInternetAccess(server)){
+        } else if (!MainActivity.hasInternetAccess(server)) {
             throw new Exception("Inputted results server not available");
-        } else{
+        } else {
             resultsServer = server;
         }
 
 
         //Checks that beacon label is not empty
-        if(label.equals("")) {
+        if (label.equals("")) {
             throw new Exception("Beacon label cannot be empty");
-        }else {
+        } else {
             beaconLabel = label;
         }
 
         //Checks that beacon height is an float
-        try{
+        try {
             beaconHeight = Float.parseFloat(height);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             throw new Exception("Beacon height is not an valid number");
         }
 
         validConfig = 1;
     }
 
-    private void loadConfig(String config){
+    private void loadConfig(String config) {
         configLoaded = 0;
 
-        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler(){
+        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 Bundle b;
-                if(msg.what == 1){
+                if (msg.what == 1) {
                     b = msg.getData();
 
                     configName = b.getString("configName");
@@ -93,7 +93,7 @@ public class Configuration implements Parcelable {
                     landmarks = b.getParcelableArrayList("landmarks");
                     configLoaded = 1;
                 }
-                if(msg.what == 2){
+                if (msg.what == 2) {
                     b = msg.getData();
 
                     errorMsg = b.getString("errorMsg");
@@ -112,23 +112,23 @@ public class Configuration implements Parcelable {
         }
     }
 
-    public String getName(){
+    public String getName() {
         return experimentName;
     }
 
-    public String getConfigFile(){
+    public String getConfigFile() {
         return configFile;
     }
 
-    public String getResultsServer(){
+    public String getResultsServer() {
         return resultsServer;
     }
 
-    public String getBeaconLabel(){
+    public String getBeaconLabel() {
         return beaconLabel;
     }
 
-    public float getBeaconHeight(){
+    public float getBeaconHeight() {
         return beaconHeight;
     }
 

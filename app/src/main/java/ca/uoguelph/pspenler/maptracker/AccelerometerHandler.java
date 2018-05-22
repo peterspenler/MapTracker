@@ -5,17 +5,16 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 
-public class AccelerometerHandler implements SensorEventListener{
+public class AccelerometerHandler implements SensorEventListener {
     private Sensor accelerometer;
     private SensorManager manager;
 
-    AccelerometerHandler(Context context){
+    AccelerometerHandler(Context context) {
         manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         try {
             accelerometer = manager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
         open();
@@ -31,12 +30,12 @@ public class AccelerometerHandler implements SensorEventListener{
         //Unused
     }
 
-    public void close(){
+    public void close() {
         manager.unregisterListener(this);
     }
 
-    public void open(){
-        if(accelerometer != null) {
+    public void open() {
+        if (accelerometer != null) {
             manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }

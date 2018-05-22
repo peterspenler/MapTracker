@@ -36,7 +36,7 @@ public class ConfigureActivity extends AppCompatActivity {
         fileEdit.setText(configuration.getConfigFile());
         serverEdit.setText(configuration.getResultsServer());
         labelEdit.setText(configuration.getBeaconLabel());
-        if(configuration.getBeaconHeight() != 0) {
+        if (configuration.getBeaconHeight() != 0) {
             heightEdit.setText(Float.toString(configuration.getBeaconHeight()));
         }
     }
@@ -49,8 +49,7 @@ public class ConfigureActivity extends AppCompatActivity {
             intent.putExtra("configObject", configuration);
             setResult(RESULT_OK, intent);
             finish();
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             Toast.makeText(ConfigureActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }

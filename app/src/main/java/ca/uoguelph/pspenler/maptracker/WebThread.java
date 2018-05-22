@@ -32,7 +32,7 @@ public class WebThread extends Thread {
     }
 
     @Override
-    public void run(){
+    public void run() {
 
         String configName = "";
         String imagePath = "";
@@ -43,20 +43,20 @@ public class WebThread extends Thread {
         StringBuilder text = new StringBuilder();
         BufferedReader br;
 
-        try{
-            if(type.equals("file")) {
+        try {
+            if (type.equals("file")) {
                 Uri uri = Uri.parse(configUri);
                 br = new BufferedReader(new FileReader(new File(uri.getPath())));
-            } else if(type.equals("http")){
+            } else if (type.equals("http")) {
                 URL url = new URL(configUri);
                 br = new BufferedReader(new InputStreamReader(url.openStream()));
 
-            } else{
+            } else {
                 throw new Exception("Config file must be web or local address");
             }
 
             String line;
-            while((line = br.readLine()) != null){
+            while ((line = br.readLine()) != null) {
                 text.append(line);
                 text.append("\n");
             }
@@ -69,7 +69,7 @@ public class WebThread extends Thread {
 
             JSONArray landmarksJSON = reader.getJSONArray("Landmarks");
             landmarks = new ArrayList<>();
-            for(int i = 0; i < landmarksJSON.length(); i++){
+            for (int i = 0; i < landmarksJSON.length(); i++) {
                 JSONObject l = landmarksJSON.getJSONObject(i);
                 String label = l.getString("Label");
                 int XDisplayLoc = l.getInt("XDisplayLoc");
@@ -82,7 +82,7 @@ public class WebThread extends Thread {
         } catch (FileNotFoundException e) {
             Log.e("FILE NOT FOUND", e.getMessage());
             errorMsg = "Config file does not exist";
-        } catch (MalformedURLException e){
+        } catch (MalformedURLException e) {
             Log.e("EXCEPTION", "MALFORMED URL");
             Log.e("URL NOT FOUND", e.getMessage());
             errorMsg = "Config file URL does not exist";
@@ -90,19 +90,19 @@ public class WebThread extends Thread {
             errorMsg = "Config file IO error";
         } catch (JSONException e) {
             errorMsg = "Config file is not valid JSON";
-        } catch (Exception e){
+        } catch (Exception e) {
             errorMsg = e.getMessage();
         }
 
         Bundle b = new Bundle();
         Message msg = handler.obtainMessage();
 
-        if(errorMsg.equals("")) {
+        if (errorMsg.equals("")) {
             b.putString("configName", configName);
             b.putString("imagePath", imagePath);
-            b.putParcelableArrayList("landmarks",landmarks);
+            b.putParcelableArrayList("landmarks", landmarks);
             msg.what = 1;
-        } else{
+        } else {
             b.putString("errorMsg", errorMsg);
             msg.what = 2;
         }

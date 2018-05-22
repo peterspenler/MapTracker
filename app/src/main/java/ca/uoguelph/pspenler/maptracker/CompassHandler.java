@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 
 public class CompassHandler implements SensorEventListener {
     private Sensor magnetometer;
@@ -19,7 +18,7 @@ public class CompassHandler implements SensorEventListener {
     private boolean mLastAccelerometerSet = false;
     private boolean mLastMagnetometerSet = false;
 
-    CompassHandler(Context context){
+    CompassHandler(Context context) {
         manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 
         try {
@@ -28,10 +27,10 @@ public class CompassHandler implements SensorEventListener {
             e.printStackTrace();
         }
 
-        if(manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null){
-            try{
+        if (manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null) {
+            try {
                 rotationV = manager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-            } catch (NullPointerException e){
+            } catch (NullPointerException e) {
                 e.printStackTrace();
             }
         }
@@ -55,7 +54,7 @@ public class CompassHandler implements SensorEventListener {
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, mLastMagnetometer, 0, event.values.length);
             mLastMagnetometerSet = true;
-            magneticField = (float) Math.sqrt(mLastMagnetometer[0]*mLastMagnetometer[0] + mLastMagnetometer[1]*mLastMagnetometer[1] + mLastMagnetometer[2]*mLastMagnetometer[2]);
+            magneticField = (float) Math.sqrt(mLastMagnetometer[0] * mLastMagnetometer[0] + mLastMagnetometer[1] * mLastMagnetometer[1] + mLastMagnetometer[2] * mLastMagnetometer[2]);
         }
         if (mLastAccelerometerSet && mLastMagnetometerSet) {
             SensorManager.getRotationMatrix(rotationMatrix, null, mLastAccelerometer, mLastMagnetometer);
@@ -70,15 +69,15 @@ public class CompassHandler implements SensorEventListener {
         //Unused
     }
 
-    public void close(){
+    public void close() {
         manager.unregisterListener(this);
     }
 
-    public void open(){
-        if(magnetometer != null) {
+    public void open() {
+        if (magnetometer != null) {
             manager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        if(rotationV != null){
+        if (rotationV != null) {
             manager.registerListener(this, rotationV, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }

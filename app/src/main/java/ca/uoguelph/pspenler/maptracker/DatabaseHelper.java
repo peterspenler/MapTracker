@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public final class DatabaseHelper extends SQLiteOpenHelper{
+public final class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "experiment_data.db";
     private static final String LANDMARK_TABLE_NAME = "position_log";
     private static final String ACCELEROMETER_TABLE_NAME = "acceleration_log";
@@ -51,26 +51,26 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         onCreate(db);
     }
 
-    private String getDatetime(){
+    private String getDatetime() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
         dateFormat.setTimeZone(TimeZone.getDefault());
         return dateFormat.format(new Date());
     }
 
-    public boolean insertLandmarkData(int realX, int realY){
+    public boolean insertLandmarkData(int realX, int realY) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DATETIME, getDatetime());
         contentValues.put(REALX, realX);
         contentValues.put(REALY, realY);
         long result = db.insert(LANDMARK_TABLE_NAME, null, contentValues);
-        if(result == -1){
+        if (result == -1) {
             return false;
         }
         return true;
     }
 
-    public boolean insertAccelData(float realX, float realY, float realZ){
+    public boolean insertAccelData(float realX, float realY, float realZ) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DATETIME, getDatetime());
@@ -78,26 +78,26 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
         contentValues.put(REALYA, realY);
         contentValues.put(REALZA, realZ);
         long result = db.insert(ACCELEROMETER_TABLE_NAME, null, contentValues);
-        if(result == -1){
+        if (result == -1) {
             return false;
         }
         return true;
     }
 
-    public boolean insertCompassData(float azimuth, float magneticField){
+    public boolean insertCompassData(float azimuth, float magneticField) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DATETIME, getDatetime());
         contentValues.put(AZIMUTH, azimuth);
         contentValues.put(MAGFIELD, magneticField);
         long result = db.insert(COMPASS_TABLE_NAME, null, contentValues);
-        if(result == -1){
+        if (result == -1) {
             return false;
         }
         return true;
     }
 
-    public JSONArray JSONPositionArray(){
+    public JSONArray JSONPositionArray() {
         JSONArray ja = new JSONArray();
         try {
             SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
@@ -115,13 +115,13 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
                 ja.put(jo);
             }
             cursor.close();
-        }catch(JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         return ja;
     }
 
-    public JSONArray JSONAccelerometerArray(){
+    public JSONArray JSONAccelerometerArray() {
         JSONArray ja = new JSONArray();
         try {
             SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
@@ -140,13 +140,13 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
                 ja.put(jo);
             }
             cursor.close();
-        }catch(JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         return ja;
     }
 
-    public JSONArray JSONCompassArray(){
+    public JSONArray JSONCompassArray() {
         JSONArray ja = new JSONArray();
         try {
             SQLiteDatabase db = DatabasePool.getDb().getReadableDatabase();
@@ -164,7 +164,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper{
                 ja.put(jo);
             }
             cursor.close();
-        }catch(JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         return ja;

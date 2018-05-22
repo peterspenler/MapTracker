@@ -11,7 +11,7 @@ public class Landmark implements Parcelable {
     private int YLoc;
     private int id;
 
-    Landmark(String label, int XDisplayLoc, int YDisplayLoc, int XLoc, int YLoc, int id){
+    Landmark(String label, int XDisplayLoc, int YDisplayLoc, int XLoc, int YLoc, int id) {
         this.label = label;
         this.XDisplayLoc = XDisplayLoc;
         this.YDisplayLoc = YDisplayLoc;
@@ -24,7 +24,7 @@ public class Landmark implements Parcelable {
         return label;
     }
 
-    public int getXDisplayLoc(){
+    public int getXDisplayLoc() {
         return XDisplayLoc;
     }
 
@@ -40,7 +40,9 @@ public class Landmark implements Parcelable {
         return YLoc;
     }
 
-    public int getId() { return id; }
+    public int getId() {
+        return id;
+    }
 
     @Override
     public int describeContents() {
