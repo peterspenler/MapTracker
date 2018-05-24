@@ -9,6 +9,10 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"flag"
+	"strings"
+	"path/filepath"
+	"log"
 )
 
 type Position struct {
@@ -38,8 +42,9 @@ type Data struct {
 }
 
 func main() {
+	port := flag.String("port", "32680", "Port number to use for this service")
 	r := initRouter()
-	r.Run(":5000")
+	r.Run(":" + *port)
 }
 
 func initRouter() *gin.Engine {
@@ -60,10 +65,11 @@ func initRouter() *gin.Engine {
 
 		var d Data
 		if err := c.BindJSON(&d); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"Success": false, "Error": err})
+			c.JSON(http.StatusBadRequest, gin.H{"Success": false, "Error": "Json Invalid"})
+			return
 		}
 		dir, _ := os.Getwd()
-		if _, err := os.Stat(dir + "/data/" + experimentName + "_position.csv"); err != nil {
+		if _, err := os.Stat(dir + "/data/" + experimentName + "_" + d.BeaconLabel + "_position.csv"); err == nil {
 			c.JSON(http.StatusConflict, gin.H{"Success": false, "Error": "File already exists"})
 			return
 		}
@@ -140,7 +146,14 @@ func writeCSV(csvType int, d Data, experimentName string) bool {
 	case CSV_CONFIG:
 		csvname = "config"
 	}
-	file, fErr := os.Create(dir + "/data/" + experimentName + "_" + csvname + ".csv")
+	fpath := dir + "/data/" + experimentName + "_" + d.BeaconLabel + "_" + csvname + ".csv"
+	fpath = filepath.Clean(fpath)
+	fpath, err := filepath.Abs(fpath)
+	if err != nil || ! strings.HasPrefix(fpath, dir + "/data") {
+		log.Println("Prefix wrong", fpath, dir)
+		return false
+	}
+	file, fErr := os.Create(fpath)
 	check(fErr)
 
 	writer := bufio.NewWriter(file)
