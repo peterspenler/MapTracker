@@ -64,10 +64,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(REALX, realX);
         contentValues.put(REALY, realY);
         long result = db.insert(LANDMARK_TABLE_NAME, null, contentValues);
-        if (result == -1) {
-            return false;
-        }
-        return true;
+        return result != -1;
     }
 
     public boolean insertAccelData(float realX, float realY, float realZ) {
@@ -78,10 +75,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(REALYA, realY);
         contentValues.put(REALZA, realZ);
         long result = db.insert(ACCELEROMETER_TABLE_NAME, null, contentValues);
-        if (result == -1) {
-            return false;
-        }
-        return true;
+        return result != -1;
     }
 
     public boolean insertCompassData(float azimuth, float magneticField) {
@@ -91,10 +85,8 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(AZIMUTH, azimuth);
         contentValues.put(MAGFIELD, magneticField);
         long result = db.insert(COMPASS_TABLE_NAME, null, contentValues);
-        if (result == -1) {
-            return false;
-        }
-        return true;
+        return result != -1;
+
     }
 
     public JSONArray JSONPositionArray() {

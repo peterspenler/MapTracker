@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private Button experimentButton;
     private Button finishExperimentButton;
 
-    private int requestCode;
-    private int grantResults[];
+    private int requestCode = 0x0;
+    private int grantResults[] = null;
     private static boolean hasInternet;
 
     private static String mapPath = "";
@@ -154,12 +154,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    HttpURLConnection urlc = (HttpURLConnection) (new URL(url).openConnection());
+                    HttpURLConnection urlc = (HttpURLConnection) new URL(url).openConnection();
                     urlc.setRequestProperty("User-Agent", "Android");
                     urlc.setRequestProperty("Connection", "close");
                     urlc.setConnectTimeout(1500);
                     urlc.connect();
-                    hasInternet = (urlc.getResponseCode() == 204 && urlc.getContentLength() <= 0);
+                    hasInternet = urlc.getResponseCode() == 204 && urlc.getContentLength() <= 0;
                     Log.d("HASINTERNET", Integer.toString(urlc.getContentLength()));
                     urlc.disconnect();
                 } catch (IOException e) {
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if ((mapPath != null) && !mapPath.equals("")) {
+        if (mapPath != null && !mapPath.equals("")) {
             new File(Uri.parse(mapPath).getPath()).delete();
         }
         super.onDestroy();
@@ -186,13 +186,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        if ((mapPath != null) && !mapPath.equals("")) {
+        if (mapPath != null && !mapPath.equals("")) {
             new File(Uri.parse(mapPath).getPath()).delete();
         }
         super.onStop();
     }
 
     public void sendData() {
+        if (configuration.getResultsServer().equals("")) {
+            // Do local saving
+
+        }
         progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
         progressDialog.setTitle("Uploading data");
         progressDialog.setContentView(R.layout.dialog_upload);
@@ -293,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
                 finishExperimentButton.setVisibility(View.GONE);
             } else if (resultCode == 409) {
                 uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
-            } else if ((resultCode == 404) || (resultCode == 0)) {
+            } else if (resultCode == 404 || resultCode == 0) {
                 if (!hasInternetAccess("http://clients3.google.com/generate_204")) {
                     uploadDialog.setMessage("No internet connection. Please check network settings");
                 } else if (configuration.getName().contains("/")) {
