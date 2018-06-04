@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void launchConfiguration(View view) {
-        Toast.makeText(this, "TEST", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, ConfigureActivity.class);
         intent.putExtra("configObject", configuration);
         startActivityForResult(intent, 1);
