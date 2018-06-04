@@ -50,7 +50,8 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
             @Override
             public void onClick(View v) {
                 isPaused = !isPaused;
-                mImageView.setPaused(isPaused);
+                isPaused = mImageView.setPaused(isPaused);
+                Toast.makeText(getBaseContext(), "Paused: " + (isPaused ? "yes" : "no"), Toast.LENGTH_SHORT).show();
             }
         });
 
