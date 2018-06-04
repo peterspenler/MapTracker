@@ -106,7 +106,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
                 if (clickDuration < MAX_CLICK_DURATION) {
                     if (paused) {
-                        Toast.makeText(getContext(), "Paused, unpause to add new entries", Toast.LENGTH_SHORT).show();
+                        displayToast("Paused, unpause to add new entries");
                         break;
                     }
                     int pointX;
@@ -127,7 +127,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
                     }
 
                     if (closeID != -1) {
-                        Toast.makeText(getContext(), "Added point " + points.get(closeID).getLabel(), Toast.LENGTH_SHORT).show();
+                        displayToast("Added point " + points.get(closeID).getLabel());
+
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
                         // These are the initializers
                         if (accelHandler == null) {
@@ -160,6 +161,17 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         return true;
     }
 
+    Toast lasttoast = null;
+    void displayToast(String s) {
+
+        if (lasttoast != null) {
+            lasttoast.cancel();
+        }
+        lasttoast = Toast.makeText(getContext(), s, Toast.LENGTH_SHORT);
+        lasttoast.show();
+
+    }
+
     public boolean setPaused(boolean paused) {
         if (compassHandler != null) {
             compassHandler.setPaused(paused);
@@ -172,6 +184,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
             return false;
         }
         this.paused = paused;
+        DatabasePool.getDb().insertLandmarkPause(paused);
         return paused;
     }
 

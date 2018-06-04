@@ -63,7 +63,7 @@ public class ConfigureActivity extends AppCompatActivity {
         }
     }
 
-    private void saveState() throws Exception {
+    private void saveState() {
         try {
             configuration.initConfig(nameEdit.getText().toString(), fileEdit.getText().toString(), serverEdit.getText().toString(), labelEdit.getText().toString(), heightEdit.getText().toString());
         } catch (Exception e) {

@@ -30,7 +30,6 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
 
     private Configuration config;
     private MapImageView mImageView;
-    private String errorMsg;
 
     private String mapPath;
 
@@ -44,14 +43,15 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         mImageView = findViewById(R.id.mapImageView);
-        getSupportActionBar().setTitle("Experiment");
+        getSupportActionBar().setTitle("Experiment: unpaused");
 
         findViewById(R.id.pause_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isPaused = !isPaused;
                 isPaused = mImageView.setPaused(isPaused);
-                Toast.makeText(getBaseContext(), "Paused: " + (isPaused ? "yes" : "no"), Toast.LENGTH_SHORT).show();
+                mImageView.displayToast("Paused: " + (isPaused ? "yes" : "no"));
+                getSupportActionBar().setTitle("Experiment: " + (isPaused ? "paused" : "unpaused"));
             }
         });
 
@@ -90,7 +90,6 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
         try {
             mImageView.setImageUri(mapPath, config.getLandmarks());
         } catch (NullPointerException e) {
-            errorMsg = "Map image could not be loaded, Please check configuration";
             setResult(RESULT_CANCELED);
             finish();
         }

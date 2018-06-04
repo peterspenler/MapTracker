@@ -10,8 +10,7 @@ public class CompassHandler implements SensorEventListener {
     private Sensor magnetometer;
     private Sensor rotationV;
     private SensorManager manager;
-    private float azimuth;
-    private float magneticField;
+
 
     private boolean paused = false;
 
@@ -51,6 +50,8 @@ public class CompassHandler implements SensorEventListener {
         }
         float[] rotationMatrix = new float[9];
         float[] orientation = new float[3];
+        float azimuth;
+        float magneticField = 0.0f;
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
             azimuth = (float) (Math.toDegrees(SensorManager.getOrientation(rotationMatrix, orientation)[0]) + 360) % 360;

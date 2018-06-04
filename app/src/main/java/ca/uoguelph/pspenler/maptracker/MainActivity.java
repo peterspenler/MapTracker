@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getSupportActionBar().setTitle("Map Tracker");
+
         configuration = new Configuration();
         DatabasePool.startDatabase(this);
         DatabasePool.deleteDb(this);
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void launchConfiguration(View view) {
+        Toast.makeText(this, "TEST", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, ConfigureActivity.class);
         intent.putExtra("configObject", configuration);
         startActivityForResult(intent, 1);
@@ -92,14 +95,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if (resultCode == RESULT_OK) {
+        if (requestCode == 1 && resultCode == RESULT_OK) {
                 isConfigured = 1;
                 configuration = data.getParcelableExtra("configObject");
                 experimentButton.setVisibility(View.VISIBLE);
                 finishExperimentButton.setVisibility(View.VISIBLE);
                 mapPath = "";
-            }
         }
         if (requestCode == 2) {
             if (resultCode == RESULT_CANCELED) {
