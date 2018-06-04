@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -52,6 +53,13 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
                 isPaused = mImageView.setPaused(isPaused);
                 mImageView.displayToast("Paused: " + (isPaused ? "yes" : "no"));
                 getSupportActionBar().setTitle("Experiment: " + (isPaused ? "paused" : "unpaused"));
+                FloatingActionButton fab = findViewById(R.id.pause_button);
+                if (!isPaused) {
+                    fab.setImageResource(android.R.drawable.ic_media_pause);
+                } else {
+                    fab.setImageResource(android.R.drawable.ic_media_play);
+                }
+
             }
         });
 
@@ -85,7 +93,6 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
         }
     }
 
-    //Initializes th
     private void initImageView() {
         try {
             mImageView.setImageUri(mapPath, config.getLandmarks());
