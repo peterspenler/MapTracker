@@ -50,6 +50,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private float prevTranslateX = 0;
     private float prevTranslateY = 0;
 
+    private boolean paused = false;
+
     Matrix scaleMatrix = new Matrix();
     ArrayList<Landmark> points;
     int numPoints = 0;
@@ -103,7 +105,10 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
 
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
                 if (clickDuration < MAX_CLICK_DURATION) {
-
+                    if (paused) {
+                        Toast.makeText(getContext(), "Paused, unpause to add new entries", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
                     int pointX;
                     int pointY;
                     float dist;
@@ -166,6 +171,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         } else {
             return false;
         }
+        this.paused = paused;
         return paused;
     }
 
