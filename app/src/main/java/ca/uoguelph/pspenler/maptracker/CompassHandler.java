@@ -13,6 +13,8 @@ public class CompassHandler implements SensorEventListener {
     private float azimuth;
     private float magneticField;
 
+    private boolean paused = false;
+
     private float[] mLastAccelerometer = new float[3];
     private float[] mLastMagnetometer = new float[3];
     private boolean mLastAccelerometerSet = false;
@@ -38,8 +40,15 @@ public class CompassHandler implements SensorEventListener {
         open();
     }
 
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (paused) {
+            return;
+        }
         float[] rotationMatrix = new float[9];
         float[] orientation = new float[3];
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {

@@ -155,6 +155,11 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         return true;
     }
 
+    public void setPaused(boolean paused) {
+        compassHandler.setPaused(paused);
+        accelHandler.setPaused(paused);
+    }
+
     @Override
     public boolean performClick() {
         return super.performClick();

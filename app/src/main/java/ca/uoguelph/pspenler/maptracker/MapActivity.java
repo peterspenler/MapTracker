@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,12 +37,22 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
     private static Dialog progressDialog;
     private ProgressBar progressBar;
 
+    private boolean isPaused = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         mImageView = findViewById(R.id.mapImageView);
         getSupportActionBar().setTitle("Experiment");
+
+        findViewById(R.id.pause_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isPaused = !isPaused;
+                mImageView.setPaused(isPaused);
+            }
+        });
 
         config = getIntent().getParcelableExtra("configObject");
         mapPath = getIntent().getStringExtra("mapPath");

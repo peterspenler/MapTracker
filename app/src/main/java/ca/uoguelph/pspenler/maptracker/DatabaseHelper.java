@@ -27,10 +27,13 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATETIME = "datetime";
     private static final String REALX = "realX";
     private static final String REALY = "realY";
+    private static final String PAUSE = "paused";
 
     private static final String REALXA = "realXAcc";
     private static final String REALYA = "realYAcc";
     private static final String REALZA = "realZAcc";
+
+
 
     private static final String AZIMUTH = "azimuth";
     private static final String MAGFIELD = "magneticField";
@@ -42,7 +45,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " INTEGER, " + REALY + " INTEGER)");
+        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " INTEGER, " + REALY + " INTEGER, " + PAUSE + " INTEGER)");
         db.execSQL("create table " + ACCELEROMETER_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALXA + " FLOAT, " + REALYA + " FLOAT, " + REALZA + " FLOAT)");
         db.execSQL("create table " + COMPASS_TABLE_NAME + "(" + DATETIME + " TEXT, " + AZIMUTH + " FLOAT, " + MAGFIELD + " FLOAT)");
     }
@@ -64,6 +67,18 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(DATETIME, getDatetime());
         contentValues.put(REALX, realX);
         contentValues.put(REALY, realY);
+        contentValues.put(PAUSE, -1);
+        long result = db.insert(LANDMARK_TABLE_NAME, null, contentValues);
+        return result != -1;
+    }
+
+    public boolean insertLandmarkPause(boolean pause) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DATETIME, getDatetime());
+        contentValues.put(REALX, 0.0);
+        contentValues.put(REALY, 0.0);
+        contentValues.put(PAUSE, pause ? 1 : 0);
         long result = db.insert(LANDMARK_TABLE_NAME, null, contentValues);
         return result != -1;
     }
@@ -104,6 +119,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
                 da.put(cursor.getFloat(2));
 
                 jo.put("Data", da);
+                jo.put("Paused", cursor.getInt(3));
 
                 ja.put(jo);
             }

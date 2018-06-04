@@ -10,6 +10,8 @@ public class AccelerometerHandler implements SensorEventListener {
     private Sensor accelerometer;
     private SensorManager manager;
 
+    private boolean paused = false;
+
     AccelerometerHandler(Context context) {
         manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         try {
@@ -20,8 +22,16 @@ public class AccelerometerHandler implements SensorEventListener {
         open();
     }
 
+
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (paused) {
+            return;
+        }
         DatabasePool.getDb().insertAccelData(event.values[0], event.values[1], event.values[2]);
     }
 

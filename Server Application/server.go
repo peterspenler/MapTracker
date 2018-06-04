@@ -18,6 +18,7 @@ import (
 type Position struct {
 	Datetime string    `binding:"required"`
 	Data     []float32 `binding:"required"`
+	Paused	 int			 `binding:"required"`
 }
 
 type Acceleration struct {
@@ -159,9 +160,9 @@ func writeCSV(csvType int, d Data, experimentName string) bool {
 
 	writer := bufio.NewWriter(file)
 	if csvType == CSV_POSITION {
-		fmt.Fprintf(writer, "\"Datetime\",\"realx\",\"realy\"")
+		fmt.Fprintf(writer, "\"Datetime\",\"realx\",\"realy\",\"paused\"")
 		for _, data := range d.PositionLog {
-			fmt.Fprintf(writer, "\n\"%s\",%f,%f", data.Datetime, data.Data[0], data.Data[1])
+			fmt.Fprintf(writer, "\n\"%s\",%f,%f,%d", data.Datetime, data.Data[0], data.Data[1], data.Paused)
 		}
 	} else if csvType == CSV_ACCELERATION {
 		fmt.Fprintf(writer, "\"Datetime\",\"realx\",\"realy\"")
