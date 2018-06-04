@@ -26,7 +26,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private int mImageHeight;
 
     private final static float minZoom = 1.f;
-    private final static float maxZoom = 4.f;
+    private final static float maxZoom = 6.f;
     private float scaleFactor = 1;
     private float oScaleFactor = 1;
     private float imageScale = 1;
@@ -39,8 +39,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private final static int ZOOM = 2;
     private int eventState;
 
-    private static final int MAX_CLICK_DURATION = 130; //Change tap length
-    private static final int MAX_TAP_DISTANCE = 30; //Change distance sensitivity
+    private static final int MAX_CLICK_DURATION = 250; //Change tap length
+    private static final int MAX_TAP_DISTANCE = 50; //Change distance sensitivity
     private long startClickTime;
 
     private float startX = 0;
@@ -124,6 +124,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
                     if (closeID != -1) {
                         Toast.makeText(getContext(), "Added point " + points.get(closeID).getLabel(), Toast.LENGTH_SHORT).show();
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
+                        // These are the initializers
                         if (accelHandler == null) {
                             accelHandler = new AccelerometerHandler(getContext());
                         }

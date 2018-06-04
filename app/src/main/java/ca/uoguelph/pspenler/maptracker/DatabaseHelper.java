@@ -12,7 +12,9 @@ import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -52,9 +54,8 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private String getDatetime() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
-        dateFormat.setTimeZone(TimeZone.getDefault());
-        return dateFormat.format(new Date());
+        final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSSZ");
+        return dateTimeFormatter.format(new Date());
     }
 
     public boolean insertLandmarkData(int realX, int realY) {

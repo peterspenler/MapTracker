@@ -278,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.dismiss();
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle)
-                    .setTitle("Upload Result")
+                    .setTitle("Upload check confResult")
                     .setMessage("")
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .setPositiveButton("Ok", null);

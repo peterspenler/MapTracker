@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,7 +64,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
 
             DownloadMapImage downloader = new DownloadMapImage();
             downloader.delegate = this;
-            downloader.execute(config.getImagePath(), "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/map2.png");
+            downloader.execute(config.getImagePath(), "file://" + Environment.getExternalStorageDirectory().toString() + "/Documents/maptracker.png");
         } else {
             if (type.equals("file")) {
                 mapPath = config.getImagePath();
@@ -143,6 +144,11 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
                 filepath = strings[1];
 
                 // Output stream
+
+                File fpath = new File(filepath.substring(filepath.indexOf(":///")+3));
+
+                File dirname = new File(fpath.getParent() + "/");
+                dirname.mkdirs();
                 OutputStream output = new FileOutputStream(Uri.parse(filepath).getPath());
                 byte data[] = new byte[1024];
 
@@ -161,7 +167,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
 
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
-                return "Could not load map, check configuration file";
+            return "Could not load map, check configuration file";
             }
 
             return filepath;

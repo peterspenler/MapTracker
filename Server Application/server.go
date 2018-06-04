@@ -69,6 +69,7 @@ func initRouter() *gin.Engine {
 			return
 		}
 		dir, _ := os.Getwd()
+		experimentName = time.Now().Format(time.RFC3339) + "_" + experimentName
 		if _, err := os.Stat(dir + "/data/" + experimentName + "_" + d.BeaconLabel + "_position.csv"); err == nil {
 			c.JSON(http.StatusConflict, gin.H{"Success": false, "Error": "File already exists"})
 			return
