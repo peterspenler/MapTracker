@@ -57,9 +57,10 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private String getDatetime() {
-        final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSSZ");
+        final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         return dateTimeFormatter.format(new Date());
     }
+
 
     public boolean insertLandmarkData(int realX, int realY) {
         SQLiteDatabase db = getWritableDatabase();
