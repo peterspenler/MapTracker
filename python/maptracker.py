@@ -1,11 +1,17 @@
 
 class MapConfigLandmark:
-    def __init__(self):
+    def __init__(self, stored=None):
         self.label = ""
         self.xdisplayloc = 0
         self.ydisplayloc = 0
         self.xloc = 0.0
         self.yloc = 0.0
+        if stored:
+            self.label = stored['Label']
+            self.xdisplayloc = stored['XDisplayLoc']
+            self.ydisplayloc = stored['YDisplayLoc']
+            self.xloc = stored['XLoc']
+            self.yloc = stored['YLoc']
 
     def toMap(self):
         return {"Label": self.label,

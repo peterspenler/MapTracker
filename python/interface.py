@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import maptracker
+import json
 import math
 import sys
 
@@ -72,9 +73,10 @@ class AutoScrollbar(ttk.Scrollbar):
 
 class Zoom_Advanced(ttk.Frame):
     ''' Advanced zoom of the image '''
-    def __init__(self, mainframe, path):
+    def __init__(self, mainframe, path, old_json=None):
         ''' Initialize the main Frame '''
         ttk.Frame.__init__(self, master=mainframe)
+
         self.master.title('MapTracker Map Maker')
         # Vertical and horizontal scrollbars for canvas
         vbar = AutoScrollbar(self.master, orient='vertical')
@@ -105,8 +107,23 @@ class Zoom_Advanced(ttk.Frame):
 
         self.landmarks = []
         self.deleting = False
+        
+        if old_json:
+            self.load_json(old_json)
 
         self.show_image()
+
+    def load_json(self, jsondata):
+        for landmark in json.load(jsondata)['Landmarks']:
+            t = maptracker.MapConfigLandmark(landmark)
+            self.landmarks.append(t)
+
+    def save_tmp(self):
+        save = maptracker.MapConfig()
+        save.landmarks = self.landmarks
+        with open('.tmp.maptracker.swp', 'w') as t:
+            t.write(save.toJSON())
+           
 
     def scroll_y(self, *args, **kwargs):
         ''' Scroll canvas vertically and redraw the image '''
@@ -144,7 +161,9 @@ class Zoom_Advanced(ttk.Frame):
             self.dialog_new(clickx, clicky)
         else:
             self.dialog_old(lmi)
-
+        
+        # Safety Save
+        self.save_tmp()
         self.show_image()
 
     def delete(self, event):
@@ -220,7 +239,7 @@ class Zoom_Advanced(ttk.Frame):
             self.canvas.imagetk = imagetk  # keep an extra reference to prevent garbage-collection
 
 
-def main(path):
+def main(path, oldjsonfile=None):
     print("""Usage:
         <Left Click and Drag>   Move canvas
         <Right Click>   Add Landmark
@@ -228,18 +247,22 @@ def main(path):
         Exit window to finish
         """)
     root = tk.Tk()
-    app = Zoom_Advanced(root, path=path)
+    if oldjsonfile:
+        with open(oldjsonfile) as jsonf:
+            app = Zoom_Advanced(root, path=path, old_json=jsonf)
+    else:    
+        app = Zoom_Advanced(root, path=path)
     root.mainloop()
     # Finish
-    title = input('Give a title to this map: ')
-    path = input('Give a URL (including http://) to this map for the image: ')
+    title = input('(Optional) Give a title to this map: ')
+    path = input('(Optional) Give a URL (including http://) to this map for the image: ')
 
     cfg = maptracker.MapConfig()
     cfg.title = title
     cfg.imagepath = path
     cfg.landmarks = app.landmarks
     print("Output:\n{}\n".format(cfg.toJSON()))
-    pathsave = input('Path to save to: ')
+    pathsave = input('Path (relative or absolute) to save to: ')
     with open(pathsave, 'w') as f:
         f.write(cfg.toJSON())
     print("Done!")
@@ -248,6 +271,6 @@ def main(path):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print('Usage: {} filename'.format(sys.argv[0]))
+        print('Usage: {} filename [old json]'.format(sys.argv[0]))
         sys.exit(1)
-    main(sys.argv[1])
+    main(*sys.argv[1:])
