@@ -7,11 +7,11 @@ public class Landmark implements Parcelable {
     private String label;
     private int XDisplayLoc;
     private int YDisplayLoc;
-    private int XLoc;
-    private int YLoc;
+    private float XLoc;
+    private float YLoc;
     private int id;
 
-    Landmark(String label, int XDisplayLoc, int YDisplayLoc, int XLoc, int YLoc, int id) {
+    Landmark(String label, int XDisplayLoc, int YDisplayLoc, float XLoc, float YLoc, int id) {
         this.label = label;
         this.XDisplayLoc = XDisplayLoc;
         this.YDisplayLoc = YDisplayLoc;
@@ -32,11 +32,11 @@ public class Landmark implements Parcelable {
         return YDisplayLoc;
     }
 
-    public int getXLoc() {
+    public float getXLoc() {
         return XLoc;
     }
 
-    public int getYLoc() {
+    public float getYLoc() {
         return YLoc;
     }
 
@@ -54,8 +54,8 @@ public class Landmark implements Parcelable {
         dest.writeString(this.label);
         dest.writeInt(this.XDisplayLoc);
         dest.writeInt(this.YDisplayLoc);
-        dest.writeInt(this.XLoc);
-        dest.writeInt(this.YLoc);
+        dest.writeFloat(this.XLoc);
+        dest.writeFloat(this.YLoc);
         dest.writeInt(this.id);
     }
 
@@ -63,8 +63,8 @@ public class Landmark implements Parcelable {
         this.label = in.readString();
         this.XDisplayLoc = in.readInt();
         this.YDisplayLoc = in.readInt();
-        this.XLoc = in.readInt();
-        this.YLoc = in.readInt();
+        this.XLoc = in.readFloat();
+        this.YLoc = in.readFloat();
         this.id = in.readInt();
     }
 

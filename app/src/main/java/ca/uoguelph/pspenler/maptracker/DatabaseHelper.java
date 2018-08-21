@@ -40,12 +40,12 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 
 
     DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 3);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " INTEGER, " + REALY + " INTEGER, " + PAUSE + " INTEGER)");
+        db.execSQL("create table " + LANDMARK_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALX + " FLOAT, " + REALY + " FLOAT, " + PAUSE + " INTEGER)");
         db.execSQL("create table " + ACCELEROMETER_TABLE_NAME + "(" + DATETIME + " TEXT, " + REALXA + " FLOAT, " + REALYA + " FLOAT, " + REALZA + " FLOAT)");
         db.execSQL("create table " + COMPASS_TABLE_NAME + "(" + DATETIME + " TEXT, " + AZIMUTH + " FLOAT, " + MAGFIELD + " FLOAT)");
     }
@@ -62,7 +62,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertLandmarkData(int realX, int realY) {
+    public boolean insertLandmarkData(float realX, float realY) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DATETIME, getDatetime());

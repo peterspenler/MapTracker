@@ -74,8 +74,8 @@ public class WebThread extends Thread {
                 String label = l.getString("Label");
                 int XDisplayLoc = l.getInt("XDisplayLoc");
                 int YDisplayLoc = l.getInt("YDisplayLoc");
-                int XLoc = l.getInt("XLoc");
-                int YLoc = l.getInt("YLoc");
+                float XLoc = (float) l.getDouble("XLoc");
+                float YLoc = (float) l.getDouble("YLoc");
                 landmarks.add(new Landmark(label, XDisplayLoc, YDisplayLoc, XLoc, YLoc, i));
             }
 
