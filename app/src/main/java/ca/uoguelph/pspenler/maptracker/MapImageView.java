@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -25,7 +26,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private int mImageWidth;
     private int mImageHeight;
 
-    private final static float minZoom = 1.f;
+    private final static float minZoom = 0.5f;
     private final static float maxZoom = 6.f;
     private float scaleFactor = 1;
     private float oScaleFactor = 1;
@@ -39,8 +40,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private final static int ZOOM = 2;
     private int eventState;
 
-    private static final int MAX_CLICK_DURATION = 250; //Change tap length
-    private static final int MAX_TAP_DISTANCE = 50; //Change distance sensitivity
+    private static final int MAX_CLICK_DURATION = 100; //Change tap length
+    private static final int MAX_TAP_DISTANCE = 300; //Change distance sensitivity
     private long startClickTime;
 
     private float startX = 0;
@@ -49,6 +50,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     private float translateY = 0;
     private float prevTranslateX = 0;
     private float prevTranslateY = 0;
+    private int lastclicked = -1;
 
     private boolean paused = false;
 
@@ -56,6 +58,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
     ArrayList<Landmark> points;
     int numPoints = 0;
     Paint pointPaint;
+    Paint pointPaintHigh;
     int touchMod = 0;
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -120,14 +123,29 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
                         pointX = (int) prevTranslateX + (int) (canvasScale * points.get(i).getXDisplayLoc());
                         pointY = (int) prevTranslateY + (int) (canvasScale * points.get(i).getYDisplayLoc());
                         dist = (float) Math.sqrt(Math.pow((pointX - event.getX()), 2) + Math.pow((pointY - event.getY() - touchMod), 2));
-                        if ((dist < closeDist) && (dist < MAX_TAP_DISTANCE)) {
+                        if (dist < closeDist) {
                             closeDist = dist;
                             closeID = points.get(i).getId();
                         }
                     }
 
-                    if (closeID != -1) {
+                    if (closeID != -1 && closeDist < MAX_TAP_DISTANCE) {
                         displayToast("Added point " + points.get(closeID).getLabel());
+                        lastclicked = closeID;
+
+                        // Play sound
+                        final MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.button);
+                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mediaPlayer) {
+                                mp.reset();
+                                mp.release();
+
+                            }
+                        });
+                        mp.start();
+                        // Redraw
+                        this.postInvalidate();
 
                         DatabasePool.getDb().insertLandmarkData(points.get(closeID).getXLoc(), points.get(closeID).getYLoc());
                         // These are the initializers
@@ -193,6 +211,8 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         return super.performClick();
     }
 
+    Paint textPaint = new Paint();
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -202,9 +222,18 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         scaleMatrix.postScale(scaleFactor / imageScale, scaleFactor / imageScale);
         canvas.setMatrix(scaleMatrix);
         canvas.drawBitmap(mBitmap, 0, 0, null);
+
+        textPaint.setColor(getResources().getColor(R.color.text_light));
+        textPaint.setTextAlign(Paint.Align.CENTER);
         for (int i = 0; i < numPoints; i++) {
-            canvas.drawCircle(points.get(i).getXDisplayLoc(), points.get(i).getYDisplayLoc(), 20, pointPaint);
+            if (i == lastclicked) {
+                canvas.drawCircle(points.get(i).getXDisplayLoc(), points.get(i).getYDisplayLoc(), 20, pointPaintHigh);
+            } else {
+                canvas.drawCircle(points.get(i).getXDisplayLoc(), points.get(i).getYDisplayLoc(), 20, pointPaint);
+            }
+            canvas.drawText(points.get(i).getLabel(), points.get(i).getXDisplayLoc(), points.get(i).getYDisplayLoc(), textPaint);
         }
+
         canvas.restore();
     }
 
@@ -248,7 +277,9 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
         points = p;
         numPoints = points.size();
         pointPaint = new Paint();
+        pointPaintHigh = new Paint();
         pointPaint.setColor(getResources().getColor(R.color.colorAccent));
+        pointPaintHigh.setColor(getResources().getColor(R.color.colorPrimary));
 
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
             int actionBarHeight = 0;
