@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private String getDatetime() {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SZ", Locale.CANADA);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.CANADA);
             dateFormat.setTimeZone(TimeZone.getDefault());
             return dateFormat.format(new Date());
         }
