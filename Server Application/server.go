@@ -175,12 +175,13 @@ func writeCSV(csvType int, d Data, experimentName string) bool {
 			fmt.Fprintf(writer, "\n\"%s\",%f,%f", data.Datetime, data.Data[0], data.Data[1])
 		}
 	} else if csvType == CSV_CONFIG {
+		// This should be converted to a struct the uses the json package but for now use comma
 		fmt.Fprintf(writer, "{\n")
-		fmt.Fprintf(writer, "\t\"SubmissionDatetime\": \"%s\"\n", d.SubmissionDatetime)
-		fmt.Fprintf(writer, "\t\"ReceiveDatetime\": \"%s\"\n", t.Format(time.RFC3339))
-		fmt.Fprintf(writer, "\t\"Experiment Name\": \"%s\"\n", d.ExperimentName)
-		fmt.Fprintf(writer, "\t\"Configuration File\": \"%s\"\n", d.ConfigurationFile)
-		fmt.Fprintf(writer, "\t\"Beacon Label\": \"%s\"\n", d.BeaconLabel)
+		fmt.Fprintf(writer, "\t\"SubmissionDatetime\": \"%s\",\n", d.SubmissionDatetime)
+		fmt.Fprintf(writer, "\t\"ReceiveDatetime\": \"%s\",\n", t.Format(time.RFC3339))
+		fmt.Fprintf(writer, "\t\"Experiment Name\": \"%s\",\n", d.ExperimentName)
+		fmt.Fprintf(writer, "\t\"Configuration File\": \"%s\,"\n", d.ConfigurationFile)
+		fmt.Fprintf(writer, "\t\"Beacon Label\": \"%s\,"\n", d.BeaconLabel)
 		fmt.Fprintf(writer, "\t\"Beacon Height\": %f\n", d.BeaconHeight)
 		fmt.Fprintf(writer, "}")
 	}
