@@ -285,7 +285,6 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog uploadDialog = builder.create();
             uploadDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.background_dark)));
             uploadDialog.show();
-
             uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
             if (resultCode == 201) {
                 DatabasePool.finishDb(getBaseContext());
@@ -313,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private String getDatetime() {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.CANADA);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SZ", Locale.CANADA);
             dateFormat.setTimeZone(TimeZone.getDefault());
             return dateFormat.format(new Date());
         }

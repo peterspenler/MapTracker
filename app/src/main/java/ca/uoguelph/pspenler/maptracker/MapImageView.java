@@ -134,7 +134,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
                         lastclicked = closeID;
 
                         // Play sound
-                        final MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.button);
+                        final MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.dustyroom_multimedia_select_digital_button);
                         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override
                             public void onCompletion(MediaPlayer mediaPlayer) {
