@@ -55,7 +55,7 @@ public class Configuration implements Parcelable {
         //Checks that the results server is valid
         if (server.equals("")) {
             error = "Results server address cannot be empty";
-        } else if (!MainActivity.hasInternetAccess(server)) {
+        } else if (!MainActivity.hasInternetAccess(server, true)) {
             error = "Inputted results server not available";
         }
 

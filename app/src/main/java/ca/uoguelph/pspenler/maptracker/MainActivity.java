@@ -32,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
         onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
+        sslContext = getSingleSSLContext();
     }
 
     public void launchConfiguration(View view) {
@@ -159,14 +161,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static boolean hasInternetAccess(final String url) {
+    public static boolean hasInternetAccess(final String url, final boolean internal) {
         hasInternet = false;
 
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    HttpURLConnection urlc = (HttpURLConnection) new URL(url).openConnection();
+                    Log.d("DEBUG", url);
+                    HttpURLConnection urlc;
+                    if (internal) {
+                        urlc = createTLSConnInternal(url);
+                    } else {
+                        urlc = (HttpsURLConnection) new URL(url).openConnection();
+                    }
+
                     urlc.setRequestProperty("User-Agent", "Android");
                     urlc.setRequestProperty("Connection", "close");
                     urlc.setConnectTimeout(1500);
@@ -308,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (resultCode == 409) {
                 uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
             } else if (resultCode == 404 || resultCode == 0) {
-                if (!hasInternetAccess("http://clients3.google.com/generate_204")) {
+                if (!hasInternetAccess("http://clients3.google.com/generate_204", false)) {
                     uploadDialog.setMessage("No internet connection. Please check network settings");
                 } else if (configuration.getName().contains("/")) {
                     uploadDialog.setMessage("The experiment name is invalid. Please remove any '/' characters from the experiment name");
@@ -335,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             InputStream caInput = getResources().openRawResource(
-                    getResources().getIdentifier("ca",
+                    getResources().getIdentifier("server",
                             "raw", getPackageName()));
             Certificate ca;
             try {
@@ -362,12 +371,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static SSLContext sslContext;
 
-    private HttpsURLConnection createTLSConnInternal(String urls) throws IOException {
+    static HttpsURLConnection createTLSConnInternal(String urls) throws IOException {
         if (sslContext == null) {
-            sslContext = getSingleSSLContext();
+            throw new RuntimeException("SSL Was not initialized");
         }
 
         try {
+            Log.d("createTLSConnInternal", urls);
             URL url = new URL(urls);
             HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
             urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());

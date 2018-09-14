@@ -20,6 +20,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class WebThread extends Thread {
 
     private Handler handler;
@@ -48,8 +50,8 @@ public class WebThread extends Thread {
                 Uri uri = Uri.parse(configUri);
                 br = new BufferedReader(new FileReader(new File(uri.getPath())));
             } else if (type.equals("http")) {
-                URL url = new URL(configUri);
-                br = new BufferedReader(new InputStreamReader(url.openStream()));
+                HttpsURLConnection conn = MainActivity.createTLSConnInternal(configUri);
+                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 
             } else {
                 throw new Exception("Config file must be web or local address");

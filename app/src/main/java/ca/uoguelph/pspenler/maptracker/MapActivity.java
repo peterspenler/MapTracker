@@ -23,6 +23,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.net.ssl.HttpsURLConnection;
+
 interface AsyncResponse {
     void processFinish(String output);
 }
@@ -71,7 +73,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
     private void initMapView() {
         String type = config.getImagePath().substring(0, Math.min(config.getImagePath().length(), 4));
 
-        if (type.equals("http") && (mapPath == null || mapPath.equals(""))) {
+        if ((type.equals("http") || type.equals("http")) && (mapPath == null || mapPath.equals(""))) {
             progressDialog = new Dialog(this, R.style.Theme_AppCompat_Dialog_Alert);
             progressDialog.setTitle("Uploading data");
             progressDialog.setContentView(R.layout.dialog_upload);
@@ -153,12 +155,11 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
         protected String doInBackground(String... strings) {
             int count;
             try {
-                URL url = new URL(strings[0]);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                HttpsURLConnection connection = MainActivity.createTLSConnInternal(strings[0]);
                 connection.connect();
 
                 // download the file
-                InputStream input = new BufferedInputStream(url.openStream(), 8192);
+                InputStream input = new BufferedInputStream(connection.getInputStream(), 8192);
                 filepath = strings[1];
 
                 // Output stream
@@ -184,7 +185,7 @@ public class MapActivity extends AppCompatActivity implements AsyncResponse {
                 connection.disconnect();
 
             } catch (Exception e) {
-                Log.e("Error: ", e.getMessage());
+                Log.e("Error: ", e.getMessage(), e);
             return "Could not load map, check configuration file";
             }
 
