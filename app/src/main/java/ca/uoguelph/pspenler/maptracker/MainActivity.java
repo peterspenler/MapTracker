@@ -21,20 +21,32 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -222,8 +234,7 @@ public class MainActivity extends AppCompatActivity {
         protected Integer doInBackground(String... urls) {
             int resultCode = 0;
             try {
-                URL url = new URL(urls[0]);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                HttpsURLConnection conn = createTLSConnInternal(urls[0]);
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
                 conn.setRequestProperty("Accept", "application/json");
@@ -315,6 +326,55 @@ public class MainActivity extends AppCompatActivity {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.CANADA);
             dateFormat.setTimeZone(TimeZone.getDefault());
             return dateFormat.format(new Date());
+        }
+
+    }
+
+    private SSLContext getSingleSSLContext() {
+        // https://developer.android.com/training/articles/security-ssl#java
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream caInput = getResources().openRawResource(
+                    getResources().getIdentifier("ca",
+                            "raw", getPackageName()));
+            Certificate ca;
+            try {
+                ca = cf.generateCertificate(caInput);
+                System.out.println("ca=" + ((X509Certificate) ca).getSubjectDN());
+            } finally {
+                caInput.close();
+            }
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("ca", ca);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(keyStore);
+
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, tmf.getTrustManagers(), null);
+            return context;
+        } catch (Exception e) {
+            // We want to fail the whole app if this isn't found
+            throw new RuntimeException("Failed to getSingleSSLContext", e);
+        }
+
+    }
+
+    private static SSLContext sslContext;
+
+    private HttpsURLConnection createTLSConnInternal(String urls) throws IOException {
+        if (sslContext == null) {
+            sslContext = getSingleSSLContext();
+        }
+
+        try {
+            URL url = new URL(urls);
+            HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
+            urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
+            return urlConnection;
+        } catch (MalformedURLException e) {
+            // Panic
+            throw new RuntimeException("Programmer error", e);
         }
 
     }

@@ -2,23 +2,23 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"os"
-	"time"
-	"flag"
-	"strings"
 	"path/filepath"
-	"log"
+	"strings"
+	"time"
 )
 
 type Position struct {
 	Datetime string    `binding:"required"`
 	Data     []float32 `binding:"required"`
-	Paused	 int			 `binding:"required"`
+	Paused   int       `binding:"required"`
 }
 
 type Acceleration struct {
@@ -44,8 +44,16 @@ type Data struct {
 
 func main() {
 	port := flag.String("port", "32680", "Port number to use for this service")
+	key := flag.String("key", "", "Key file to use")
+	crt := flag.String("crt", "", "Crt file to use")
+	flag.Parse()
 	r := initRouter()
-	r.Run(":" + *port)
+	s := &http.Server{
+		Addr:    ":" + *port,
+		Handler: r,
+	}
+	log.Fatal(s.ListenAndServeTLS(*crt, *key))
+
 }
 
 func initRouter() *gin.Engine {
@@ -151,7 +159,7 @@ func writeCSV(csvType int, d Data, experimentName string) bool {
 	fpath := dir + "/data/" + experimentName + "_" + d.BeaconLabel + "_" + csvname + ".csv"
 	fpath = filepath.Clean(fpath)
 	fpath, err := filepath.Abs(fpath)
-	if err != nil || ! strings.HasPrefix(fpath, dir + "/data") {
+	if err != nil || !strings.HasPrefix(fpath, dir+"/data") {
 		log.Println("Prefix wrong", fpath, dir)
 		return false
 	}
