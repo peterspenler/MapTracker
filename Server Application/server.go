@@ -173,7 +173,7 @@ func writeCSV(csvType int, d Data, experimentName string) bool {
 			fmt.Fprintf(writer, "\n\"%s\",%f,%f,%d", data.Datetime, data.Data[0], data.Data[1], data.Paused)
 		}
 	} else if csvType == CSV_ACCELERATION {
-		fmt.Fprintf(writer, "\"Datetime\",\"realx\",\"realy\"")
+		fmt.Fprintf(writer, "\"Datetime\",\"realx\",\"realy\",\"realz\"")
 		for _, data := range d.AccelerometerData {
 			fmt.Fprintf(writer, "\n\"%s\",%f,%f,%f", data.Datetime, data.Data[0], data.Data[1], data.Data[2])
 		}
