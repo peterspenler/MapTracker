@@ -12,4 +12,5 @@
     <string name="end_experiment_button">Finish Experiment</string>
     <string name="title_activity_configure">Configure Experiment</string>
     <string name="title_activity_map">Map</string>
+    <string name="send_stored">Resend Failed Submissions</string>
 </resources>

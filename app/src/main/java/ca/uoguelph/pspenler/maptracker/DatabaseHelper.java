@@ -20,6 +20,7 @@ import java.util.TimeZone;
 
 public final class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "experiment_data.db";
+    public static final int VERSION = 3;
     private static final String LANDMARK_TABLE_NAME = "position_log";
     private static final String ACCELEROMETER_TABLE_NAME = "acceleration_log";
     private static final String COMPASS_TABLE_NAME = "compass_log";
@@ -38,9 +39,10 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
     private static final String AZIMUTH = "azimuth";
     private static final String MAGFIELD = "magneticField";
 
+    DatabaseHelper(Context context, String dbname) { super(context, dbname, null, VERSION); }
 
     DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 3);
+        super(context, DATABASE_NAME, null, VERSION);
     }
 
     @Override

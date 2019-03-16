@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -42,6 +43,7 @@ import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button experimentButton;
     private Button finishExperimentButton;
+    private Button resendButton;
 
     private int requestCode = 0x0;
     private int grantResults[] = null;
@@ -80,13 +83,32 @@ public class MainActivity extends AppCompatActivity {
 
         experimentButton = findViewById(R.id.experimentButton);
         finishExperimentButton = findViewById(R.id.finishExperimentButton);
+        resendButton = findViewById(R.id.sendStored);
 
         experimentButton.setVisibility(View.GONE);
         finishExperimentButton.setVisibility(View.GONE);
+        resendButton.setVisibility(View.GONE);
+        // Sets resend button if any failed jobs need to send
+        unsentLogs();
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
         onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
         sslContext = getSingleSSLContext();
+    }
+
+    public boolean unsentLogs() {
+        boolean any = DatabasePool.listFailedSends(getBaseContext()).size() > 0;
+        resendButton.setVisibility((any && isConfigured == 1) ? View.VISIBLE : View.GONE);
+        return any;
+    }
+
+    public void sendStored(View view) {
+        List<File> failed = DatabasePool.listFailedSends(getBaseContext());
+        for (File f : failed) {
+            sendData(f.getPath());
+            // Weird but I just want it to do one at a time for now
+            break;
+        }
     }
 
     public void launchConfiguration(View view) {
@@ -113,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 configuration = data.getParcelableExtra("configObject");
                 experimentButton.setVisibility(View.VISIBLE);
                 finishExperimentButton.setVisibility(View.VISIBLE);
+                unsentLogs();
                 mapPath = "";
         }
         if (requestCode == 2) {
@@ -185,6 +208,8 @@ public class MainActivity extends AppCompatActivity {
                     urlc.disconnect();
                 } catch (IOException e) {
                     Log.e("INTERNET ACCESS", "Error checking internet connection", e);
+                } catch (Exception e) {
+                    Log.e("INTERNET ACCESS", "Error checking internet connection", e);
                 }
             }
         });
@@ -213,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    public void sendData() {
+    public void sendData(String... args) {
         if (configuration.getResultsServer().equals("")) {
             // Do local saving
 
@@ -226,13 +251,19 @@ public class MainActivity extends AppCompatActivity {
         progressBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN);
         progressDialog.show();
         try {
-            new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"));
+            if (args.length != 0) {
+                new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"),
+                        args[0]);
+            } else {
+                new UploadData().execute(configuration.getResultsServer() + "/" + URLEncoder.encode(configuration.getName(), "UTF-8"));
+            }
+            unsentLogs();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
 
-    class UploadData extends AsyncTask<String, String, Integer> {
+    class UploadData extends AsyncTask<String, String, Pair<String, Integer>> {
 
         @Override
         protected void onPreExecute() {
@@ -240,10 +271,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Integer doInBackground(String... urls) {
+        protected Pair<String, Integer> doInBackground(String... urls) {
             int resultCode = 0;
+            String dbs = null;
+            DatabaseHelper dbh = DatabasePool.getDb();
+            HttpsURLConnection conn = null;
             try {
-                HttpsURLConnection conn = createTLSConnInternal(urls[0]);
+
+                if (urls.length > 1) {
+                    // Use a different database
+                    dbs = urls[1];
+                    dbh = new DatabaseHelper(getApplicationContext(), dbs);
+                }
+                conn = createTLSConnInternal(urls[0]);
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
                 conn.setRequestProperty("Accept", "application/json");
@@ -256,9 +296,9 @@ public class MainActivity extends AppCompatActivity {
                 jsonParam.put("Configuration File", configuration.getConfigFile());
                 jsonParam.put("Beacon Label", configuration.getBeaconLabel());
                 jsonParam.put("Beacon Height", configuration.getBeaconHeight());
-                jsonParam.put("PositionLog", DatabasePool.getDb().JSONPositionArray());
-                jsonParam.put("AccelerometerData", DatabasePool.getDb().JSONAccelerometerArray());
-                jsonParam.put("CompassData", DatabasePool.getDb().JSONCompassArray());
+                jsonParam.put("PositionLog", dbh.JSONPositionArray());
+                jsonParam.put("AccelerometerData", dbh.JSONAccelerometerArray());
+                jsonParam.put("CompassData", dbh.JSONCompassArray());
 
                 DataOutputStream os = new DataOutputStream(conn.getOutputStream());
                 byte[] stringBytes = jsonParam.toString().getBytes(StandardCharsets.UTF_8);
@@ -281,11 +321,17 @@ public class MainActivity extends AppCompatActivity {
 
                 resultCode = conn.getResponseCode();
                 conn.disconnect();
+
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                // Close the handler we opened if not the system one
+                if (dbs != null) {
+                    dbh.close();
+                }
             }
 
-            return resultCode;
+            return new Pair<>(dbs, resultCode);
         }
 
 
@@ -294,7 +340,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Integer resultCode) {
+        protected void onPostExecute(Pair<String, Integer> result) {
+            int resultCode = result.second;
+            String db = result.first;
             progressDialog.dismiss();
 
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle)
@@ -307,13 +355,21 @@ public class MainActivity extends AppCompatActivity {
             uploadDialog.show();
             uploadDialog.setIcon(android.R.drawable.ic_dialog_info);
             if (resultCode == 201) {
-                DatabasePool.finishDb(getBaseContext());
+                // Finish or delete (pretty much the same thing) if we were successful.
+                if (db == null) {
+                    DatabasePool.finishDb(getBaseContext());
+                } else {
+                    getBaseContext().deleteDatabase(db);
+                }
+
                 uploadDialog.setMessage("Success!");
-                if ((mapPath != null) && !mapPath.equals("")) {
+                if (mapPath != null && !mapPath.equals("")) {
                     new File(Uri.parse(mapPath).getPath()).delete();
                 }
                 experimentButton.setVisibility(View.GONE);
                 finishExperimentButton.setVisibility(View.GONE);
+                unsentLogs();
+                return;
             } else if (resultCode == 409) {
                 uploadDialog.setMessage("This experiment name already exists. Please change the name in the configuration");
             } else if (resultCode == 404 || resultCode == 0) {
@@ -329,6 +385,13 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 uploadDialog.setMessage("RESULT CODE: " + Integer.toString(resultCode));
             }
+
+            // For everything else move the active DB to tmp if fail
+            if (db == null) {
+                Log.d("DB", String.format("We moved db: %b ", DatabasePool.moveDb(getBaseContext(),
+                        getDatetime() + ".db")));
+            }
+            unsentLogs();
         }
 
         private String getDatetime() {

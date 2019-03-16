@@ -84,7 +84,8 @@ public class Configuration implements Parcelable {
     private void loadConfig(String config) {
         configLoaded = 0;
 
-        @SuppressLint("HandlerLeak") final Handler mHandler = new Handler() {
+        @SuppressLint("HandlerLeak")
+        final Handler mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 Bundle b;
                 if (msg.what == 1) {

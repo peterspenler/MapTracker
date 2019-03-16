@@ -268,7 +268,7 @@ public class MapImageView extends android.support.v7.widget.AppCompatImageView {
 
         mImageWidth = displayMetrics.widthPixels;
         mImageHeight = Math.round(mImageWidth * aspectRatio);
-        imageScale = mBitmap.getWidth() / mImageWidth;
+        imageScale =  ((float) mBitmap.getWidth()) / mImageWidth;
         translateY = prevTranslateY = (displayMetrics.heightPixels / 2) - (mImageHeight / 2) + 60;
 
         invalidate();
